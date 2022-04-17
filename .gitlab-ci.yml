@@ -1,0 +1,71 @@
+include:
+  - https://gitlab.exphost.pl/exphost/exphost-helms/-/raw/master/common/gitlab-ci.yml
+  - https://gitlab.exphost.pl/exphost-controller/controller-helms/-/raw/master/helpers/gitlab-ci.yml
+
+stages:
+  - prepare
+  - tests
+  - build
+  - push
+  - deploy_to_dev
+  - deploy
+  - cleanup
+  - upload
+
+
+tests:
+  stage: tests
+  image: python:3.9
+  script:
+    - pip install -r requirements.txt
+    - cd app
+    - flake8
+    - pytest --cov --cov-report term --cov-report xml --junitxml=report.xml
+  artifacts:
+    reports:
+      cobertura: app/coverage.xml
+      junit: app/report.xml
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  cache:
+    paths:
+      - .cache/pip
+
+build:
+  stage: build
+  image: quay.io/podman/stable
+  extends: .registry
+  script:
+    - podman pull $CI_REGISTRY_IMAGE:dev || true
+    - >
+      podman build 
+      --pull
+      --tag $CI_REGISTRY_IMAGE:dev
+      .
+    - podman push $CI_REGISTRY_IMAGE:dev
+
+push latest:
+  variables:
+    GIT_STRATEGY: none
+  image: quay.io/podman/stable
+  stage: push
+  extends: .registry
+  only:
+    - master
+  script:
+    - podman pull $CI_REGISTRY_IMAGE:dev
+    - podman tag $CI_REGISTRY_IMAGE:dev $CI_REGISTRY_IMAGE:latest
+    - podman push $CI_REGISTRY_IMAGE:latest
+
+push tag:
+  variables:
+    GIT_STRATEGY: none
+  image: quay.io/podman/stable
+  stage: push
+  extends: .registry
+  only:
+    - tags
+  script:
+    - podman pull $CI_REGISTRY_IMAGE:dev
+    - podman tag $CI_REGISTRY_IMAGE:dev $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    - podman push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
