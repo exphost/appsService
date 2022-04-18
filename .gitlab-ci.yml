@@ -125,7 +125,7 @@ delete_app:
     - helm uninstall -n $KUBE_NAMESPACE ldap --wait
     - helm uninstall -n $KUBE_NAMESPACE auth --wait
     - helm uninstall -n $KUBE_NAMESPACE test-controller --wait
-    - helm uninstall -n $KUBE_NAMESPACE test-webui --wait
+    - helm uninstall -n $KUBE_NAMESPACE test-appsservice --wait
     - kubectl -n $KUBE_NAMESPACE delete pvc --all
   variables:
     GIT_STRATEGY: none
