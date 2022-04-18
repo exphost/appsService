@@ -69,3 +69,80 @@ push tag:
     - podman pull $CI_REGISTRY_IMAGE:dev
     - podman tag $CI_REGISTRY_IMAGE:dev $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
     - podman push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+
+deploy branch:
+  stage: deploy
+  image:
+    name: alpine/helm
+  environment:
+    name: dev/$CI_COMMIT_REF_SLUG
+    on_stop: delete_app
+    url: https://$KUBE_NAMESPACE.ci.exphost.pl
+  before_script:
+  - helm repo add exphost https://gitlab.exphost.pl/charts
+  - helm repo add dex https://charts.dexidp.io
+  - helm repo update
+  - apk add --no-cache ca-certificates git curl
+  - curl -L "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl
+  - chmod +x /usr/local/bin/kubectl
+  script:
+  - echo "CI_ENVIRONMENT_SLUG $CI_ENVIRONMENT_SLUG"
+  - echo "CI_ENVIRONMENT_SLUG $CI_ENVIRONMENT_SLUG"
+  - echo "KUBE_NAMESPACE $KUBE_NAMESPACE"
+  - sed -i "s/__DOMAIN__/${KUBE_NAMESPACE}.ci.exphost.pl/" gitlab-ci-values-dex.yml
+  - sed -i "s/__DOMAIN__/${KUBE_NAMESPACE}.ci.exphost.pl/" gitlab-ci-values-appsservice.yml
+  - sed -i "s/__DOMAIN__/${KUBE_NAMESPACE}.ci.exphost.pl/" gitlab-ci-values.yml
+  - >
+    helm upgrade -n $KUBE_NAMESPACE -i auth dex/dex -f gitlab-ci-values-dex.yml
+    --wait --wait-for-jobs
+  - >
+    helm upgrade -n $KUBE_NAMESPACE -i ldap exphost/openldap -f gitlab-ci-values.yml
+    --wait --wait-for-jobs
+  - >
+    helm upgrade -n $KUBE_NAMESPACE -i test-controller exphost/exphost-controller -f gitlab-ci-values.yml
+    --version v0.3.0-1-gfa75265
+    --set global.domain=${KUBE_NAMESPACE}.ci.exphost.pl
+    --wait --wait-for-jobs
+  - >
+    helm upgrade -n $KUBE_NAMESPACE -i test-appsservice chart -f gitlab-ci-values-appsservice.yml
+    --set podAnnotations."app\.gitlab\.com/app"=$CI_PROJECT_PATH_SLUG
+    --set podAnnotations."app\.gitlab\.com/env"=$CI_ENVIRONMENT_SLUG
+    --set global.domain=${KUBE_NAMESPACE}.ci.exphost.pl
+    --wait --wait-for-jobs
+  - kubectl -n $KUBE_NAMESPACE rollout restart deployment test-appsservice
+  rules:
+    - if: $CI_COMMIT_BRANCH
+
+delete_app:
+  stage: cleanup
+  image:
+    name: alpine/helm
+  before_script:
+  - apk add --no-cache ca-certificates git curl
+  - curl -L "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl
+  - chmod +x /usr/local/bin/kubectl
+  script:
+    - helm uninstall -n $KUBE_NAMESPACE ldap --wait
+    - helm uninstall -n $KUBE_NAMESPACE auth --wait
+    - helm uninstall -n $KUBE_NAMESPACE test-controller --wait
+    - helm uninstall -n $KUBE_NAMESPACE test-webui --wait
+    - kubectl -n $KUBE_NAMESPACE delete pvc --all
+  variables:
+    GIT_STRATEGY: none
+  environment:
+    name: dev/$CI_COMMIT_REF_SLUG
+    action: stop
+  needs:
+    - deploy branch
+  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+upload:
+  extends: .upload
+  only:
+    refs:
+      - tags
+      - master

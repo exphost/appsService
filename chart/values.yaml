@@ -1,0 +1,9 @@
+image:
+  name: registry.gitlab.exphost.pl/exphost-controller/appsservice
+  pullPolicy: Always
+  tag: v0.0.1
+global:
+  domain: example.com
+
+git_repo:
+  url: "git@gitlab.exphost.pl:exphost-controller/test_tenants_repo.git"

@@ -1,0 +1,26 @@
+usersservice:
+  image:
+    tag: dev
+  ldap:
+    uri: "ldap://ldap-openldap"
+    dn: "cn=admin,dc=example,dc=com"
+    password:
+      password: pass123
+webui:
+  image:
+    tag: dev
+gateway:
+  image:
+    tag: dev
+  endpoints:
+    authendpoint: "https://auth.__DOMAIN__/dex"
+    usersservice: "http://test-controller-usersservice:5000/users/"
+
+adminPassword:
+  password: "pass123"
+configAdminPassword:
+  password: "pass123"
+initialDB:
+  serviceaccounts:
+  - name: dex
+    password: dex123

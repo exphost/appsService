@@ -1,0 +1,4 @@
+image:
+  tag: dev
+git_repo:
+  url: https://github.com/exphost/exphost.instances_libvirt
