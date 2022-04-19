@@ -21,6 +21,15 @@ def test_nginx_add(client):
     assert source['helm']
     assert source['repoURL'] == "https://charts.bitnami.com/bitnami"
 
+    with open("workdir/test-org/project.yml", "r") as file:
+        project = yaml.safe_load(file)
+    assert project['kind'] == "AppProject"
+    assert project['metadata']['name'] == "test-org"
+    assert project['metadata']['namespace'] == "argocd"
+    assert project['spec']['destinations'] == [{'namespace': 'tenant-test-org',
+                                                'server': '*'
+                                                }]
+
 
 def test_nginx_add_duplicate(client):
     response = client.post(

@@ -3,6 +3,7 @@ from flask_restx import Api, Resource, fields
 import os
 import jinja2
 from .helpers import auth_required
+from .common import create_project_if_needed
 
 bp = Blueprint('nginx', __name__, url_prefix='/nginx')
 api = Api(bp, doc='/')
@@ -54,6 +55,9 @@ class Nginx(Resource):
         )
         os.makedirs(os.path.dirname(apppath), exist_ok=True)
         current_app.config['gitsem'].acquire()
+        create_project_if_needed(request.json['org'],
+                                 current_app.config['repo'],
+                                 gitdir)
         with open(apppath, 'w') as file:
             file.write(app)
         repo = current_app.config['repo']
