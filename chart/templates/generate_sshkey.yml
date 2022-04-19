@@ -1,0 +1,33 @@
+{{- if and (not .Values.git_repo.sshkey.key) (not .Values.git_repo.sshkey.secret) }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "chart.fullname" . }}-sshkey
+spec:
+  template:
+    spec:
+      serviceAccountName: argo-ssh-generator
+      restartPolicy: Never
+      volumes:
+      - name: sshkey
+        emptyDir: {}
+      containers:
+      - name: ssh-gen
+        image: alpine
+        command:
+          - /bin/sh
+          - -c
+          - 'apk add openssh && ssh-keygen -f /key/key_rsa -N "" && chmod 666 /key/*'
+        volumeMounts:
+        - name: sshkey
+          mountPath: /key
+      - name: create-creator
+        image: bitnami/kubectl:latest
+        command:
+          - /bin/sh
+          - -c
+          - 'while [ ! -e /key/key_rsa ]; do echo "waiting for /key/key_rsa"; sleep 1; done; kubectl create secret generic {{ include "chart.fullname" . }}-sshkey --from-file=ssh-publickey=/key/key_rsa.pub --from-file=ssh-privatekey=/key/key_rsa'
+        volumeMounts:
+        - name: sshkey
+          mountPath: /key
+{{- end }}

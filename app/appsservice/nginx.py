@@ -59,6 +59,8 @@ class Nginx(Resource):
         repo = current_app.config['repo']
         repo.index.add(ingitpath)
         repo.index.commit("add nginx")
-        repo.remotes.origin.push()
+        ssh_cmd = current_app.config['ssh_cmd']
+        with repo.git.custom_environment(GIT_SSH_COMMAND=ssh_cmd):
+            repo.remotes.origin.push().raise_if_error()
         current_app.config['gitsem'].release()
         return "Created", 201

@@ -1,0 +1,10 @@
+{{- if .Values.git_repo.sshkey.key }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "chart.fullname" . }}-sshkey
+type: Opaque
+stringData:
+  ssh-privatekey: |
+{{ .Values.git_repo.sshkey.key | indent 4}}
+{{- end }}

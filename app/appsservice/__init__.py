@@ -14,7 +14,14 @@ def create_app(test_config=None):
         app.logger.error("GIT_REPO not provided")
         return False
     app.config['gitdir'] = "workdir"
-    repo = git.Repo.clone_from(app.config['GIT_REPO'], app.config['gitdir'])
+    app.config['ssh_cmd'] = ("ssh "
+                             "-o StrictHostKeyChecking=no "
+                             "-o UserKnownHostsFile=/dev/null "
+                             "-i /app/sshkey/id_rsa"
+                             )
+    repo = git.Repo.clone_from(app.config['GIT_REPO'],
+                               app.config['gitdir'],
+                               env=dict(GIT_SSH_COMMAND=app.config['ssh_cmd']))
     app.config['repo'] = repo
     app.config['gitsem'] = threading.Semaphore()
 

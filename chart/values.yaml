@@ -7,3 +7,46 @@ global:
 
 git_repo:
   url: "git@gitlab.exphost.pl:exphost-controller/test_tenants_repo.git"
+  sshkey:
+    secret: {}
+      #name: existing_secret
+      #key: existing_key
+    #key: |
+    #  -----BEGIN OPENSSH PRIVATE KEY-----
+    #  b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
+    #  NhAAAAAwEAAQAAAYEAwFTsjJL5va+Jrj2b/Bjn5iidv0wo8oEcdBI5g3B5RZh+pC7StjgE
+    #  qAyInFf5HBhru3LzJ/DfMmmiv33tJL0a4jXfHzutM/s3M7hhSUswG1JANmIcqQUsjRYBd/
+    #  EDLOX6s3QglcfFEZbNvw/OIwe9v7xQfnVJ5QlJ4UWBwzQWMMdPIBsq70eNPoz3koQRoije
+    #  KKOzsHNqYBofq27+8Ie3WdatxsoUTb8548f/XvYLoTUAvwj2bXbO+AJ+TyDIa0mp24QKGl
+    #  cRjf9xQBfLXxKBywz5rWXLHDY+lchtgZpqicWBcvF40nZa8Wth5IEsmGVJrDN1DBjjMELn
+    #  7XJ3eZRku9SkMO7u41pfyIPs/HdDXY3ydTefaxDnhaOoUaaAdHEroH/Y+uZWfly4qIuSIT
+    #  cQVzJWqJyi2tryR9hu628v5SEjD7s0aJjOs4ybY3c1jldTp3tliyk3/t4882n+RiwWHwuD
+    #  y+T+njN3wWhGBxRXfh3EfwtV1Ee1g+UmS7u3tgGZAAAFkAe5WMAHuVjAAAAAB3NzaC1yc2
+    #  EAAAGBAMBU7IyS+b2via49m/wY5+Yonb9MKPKBHHQSOYNweUWYfqQu0rY4BKgMiJxX+RwY
+    #  a7ty8yfw3zJpor997SS9GuI13x87rTP7NzO4YUlLMBtSQDZiHKkFLI0WAXfxAyzl+rN0IJ
+    #  XHxRGWzb8PziMHvb+8UH51SeUJSeFFgcM0FjDHTyAbKu9HjT6M95KEEaIo3iijs7BzamAa
+    #  H6tu/vCHt1nWrcbKFE2/OePH/172C6E1AL8I9m12zvgCfk8gyGtJqduEChpXEY3/cUAXy1
+    #  8SgcsM+a1lyxw2PpXIbYGaaonFgXLxeNJ2WvFrYeSBLJhlSawzdQwY4zBC5+1yd3mUZLvU
+    #  pDDu7uNaX8iD7Px3Q12N8nU3n2sQ54WjqFGmgHRxK6B/2PrmVn5cuKiLkiE3EFcyVqicot
+    #  ra8kfYbutvL+UhIw+7NGiYzrOMm2N3NY5XU6d7ZYspN/7ePPNp/kYsFh8Lg8vk/p4zd8Fo
+    #  RgcUV34dxH8LVdRHtYPlJku7t7YBmQAAAAMBAAEAAAGAJV7a752HRSIcgGycKGm2dXQi4o
+    #  6rziLkInGAF1f9WFZ/FOu8KYfM79IvoSE+2ASuuidls7cLx0HbS5XuRBsyZA3PosP3rYf8
+    #  e+IxlQo0+LoMnASISRcmRuulsWZ1FX5CLig8RJ4iXn6Mz7kEdq4EYoL2qPulNgmN/2WABy
+    #  vRu/yeFUDyILgoa6T8Xc2nl3iVYhQc0AY8/xtUV/0jMB1OtPgPn/aX51tmpimwJwVr0RD5
+    #  aiUVrMNPB8WEQV+/UYloT2fe8SIJ2Rz6L78yKmxa9Ofsxp+Uy1/aL+a76bulp40KBh7Dqj
+    #  bhmPJ7aXpyA/tJHUVdMepVfMVbN2QUrGzbTE6V6d+LQL6sGc5QP0HCDWrcvvw0UUV6BVjP
+    #  B92AnDsD9Z2708zC9KQI/KUYLq3flAYyLZM7cV+1v/qTqws9xx5oL4ek1snofL2rsLW+Is
+    #  pp6W7zMlt8LHoU6z1p6v/iABpOgmK/vl9QhqwMb1IIMLj9DPdDwaSIUelkJZ+Khb45AAAA
+    #  wCZ9OnKKErBJbV4i4BtlutDlEyqcmdNoULYHhhJg/ybnXg/lrCGGNjGDFFa87N+0CdwYaH
+    #  HQaOhGh4sexV8rSBTBAbuJHqVO+YKPYM2RH2yiWCToK/r+ecYm2k/2VfJ9o7D171uMBRcZ
+    #  JC0bE/l2zFgX3EGgnPL+Lez0CO5YSnX0d3Pro7WLwQ7plyb/FFhGrxZHzo5q6+lZablipB
+    #  mqt+exdnC3g+YbtH9xx6JQTPcVZTaxerClx/PWJgROJUh81AAAAMEA5K+HAuerqifar3Qy
+    #  BqfKteNNJL2943VcTJbfrlFYdY1UAU7P2ywMFLLXSdNCysYZsJs3LvVfi4HOmMzJEdrWSS
+    #  tK9vwv+fWrA+56tEdRa0AR0x4rvhAOFBF3q6w0i1tuniTOxT0BisUoSCnv8cUpha6um/WA
+    #  ocWYvSQh2YFPvKWgDFweviNIzgnRw7BDIRUHvpM5A2PFBpzOq4yMPikEuZi6MAB71YyeIP
+    #  d3KidRpark4or/+VKqoY/DT1mvZPTjAAAAwQDXTc+BZuUAnS5VQ+hHrh13IVuBSpTSX2PW
+    #  vrnDNhrmh60J4nkuFPTr/4AHzgyS7uWB9TtYYjWegVSUysBJieBJXvXnseiuaSbyc7Ye0F
+    #  iSeMaAYvcA4UK65HygaxvT8YH433QqT6eCWStxRE5G9xAnUjzSNAo0/9D2vBu+R5oRzURp
+    #  YX1aEdLM0gcNoorXjlrKIYmA7B4sW/CGnziv9kMNd/ZD7xUyQU79/dVExaEmtWvQrx9Glh
+    #  0hGlxzry/5tFMAAAAUdG9yZ2lyZW5Ac21hcnRyYXB0b3IBAgMEBQYH
+    #  -----END OPENSSH PRIVATE KEY-----
