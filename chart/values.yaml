@@ -1,7 +1,7 @@
 image:
   name: registry.gitlab.exphost.pl/exphost-controller/appsservice
   pullPolicy: Always
-  tag: v0.0.1
+  tag:
 global:
   domain: example.com
 

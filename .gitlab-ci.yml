@@ -13,6 +13,9 @@ stages:
   - upload
 
 
+get version:
+  extends: .get version
+
 tests:
   stage: tests
   image: python:3.9
@@ -44,7 +47,7 @@ build:
       .
     - podman push $CI_REGISTRY_IMAGE:dev
 
-push latest:
+push image:
   variables:
     GIT_STRATEGY: none
   image: quay.io/podman/stable
@@ -52,23 +55,26 @@ push latest:
   extends: .registry
   only:
     - master
+    - tags
   script:
     - podman pull $CI_REGISTRY_IMAGE:dev
     - podman tag $CI_REGISTRY_IMAGE:dev $CI_REGISTRY_IMAGE:latest
     - podman push $CI_REGISTRY_IMAGE:latest
+    - "podman tag $CI_REGISTRY_IMAGE:dev $CI_REGISTRY_IMAGE:$(cat output/version.txt)"
+    - "podman push $CI_REGISTRY_IMAGE:$(cat output/version.txt)"
 
-push tag:
-  variables:
-    GIT_STRATEGY: none
-  image: quay.io/podman/stable
-  stage: push
-  extends: .registry
-  only:
-    - tags
-  script:
-    - podman pull $CI_REGISTRY_IMAGE:dev
-    - podman tag $CI_REGISTRY_IMAGE:dev $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
-    - podman push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+#push tag:
+#  variables:
+#    GIT_STRATEGY: none
+#  image: quay.io/podman/stable
+#  stage: push
+#  extends: .registry
+#  only:
+#    - tags
+#  script:
+#    - podman pull $CI_REGISTRY_IMAGE:dev
+#    - podman tag $CI_REGISTRY_IMAGE:dev $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+#    - podman push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
 
 deploy branch:
   stage: deploy
