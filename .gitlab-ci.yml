@@ -117,6 +117,8 @@ deploy branch:
     --wait --wait-for-jobs
   - kubectl -n $KUBE_NAMESPACE rollout restart deployment test-appsservice
   rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: never
     - if: $CI_COMMIT_BRANCH
 
 delete_app:
@@ -155,6 +157,17 @@ upload:
 
 upload latest:
   extends: .upload latest
+  only:
+    refs:
+      - tags
+      - master
+
+update general helm:
+  extends: .deploy-to-git
+  stage: upload
+  variables:
+    patch_cmd: yq -i e ".dependencies[] |= select(.name == \"appsservice\").version=\"$$VERSION\"" chart/Chart.yaml
+    repo: git@gitlab.exphost.pl:exphost-controller/controller-helms.git
   only:
     refs:
       - tags
