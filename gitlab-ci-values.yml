@@ -1,20 +1,20 @@
 usersservice:
-  image:
-    tag: dev
   ldap:
     uri: "ldap://ldap-openldap"
     dn: "cn=admin,dc=example,dc=com"
     password:
       password: pass123
 webui:
-  image:
-    tag: dev
+  endpoints:
+    authendpoint:
+      url: https://auth.__DOMAIN__/dex
+      secret: Yp4fGf79FutdBDJArQqxhUiVbufVxjzu
 gateway:
-  image:
-    tag: dev
   endpoints:
     authendpoint: "https://auth.__DOMAIN__/dex"
     usersservice: "http://test-controller-usersservice:5000/users/"
+appsservice:
+  enabled: false
 
 adminPassword:
   password: "pass123"

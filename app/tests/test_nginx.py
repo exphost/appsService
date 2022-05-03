@@ -59,3 +59,41 @@ def test_nginx_add_not_logged(client):
         json={'org': 'test-org',
               'name': 'test-app'})
     assert response.status_code == 401
+
+
+def test_nginx_list(client, example_apps):
+    response = client.get(
+        '/nginx/?org=test-org',
+        headers={'X-User': 'test_user'})
+    assert response.status_code == 200
+    assert 'nginx' in response.json
+    assert len(response.json['nginx']) == 2
+    assert response.json['nginx'][0]['name'] == "test-app"
+    assert response.json['nginx'][1]['name'] == "another-app"
+
+    response = client.get(
+        '/nginx/?org=test-org',
+        headers={'X-User': 'test_user'})
+    assert response.status_code == 200
+
+
+def test_nginx_list_empty_org(client, example_apps):
+    response = client.get(
+        '/nginx/?org=test-org2',
+        headers={'X-User': 'test_user'})
+    assert response.status_code == 200
+    assert 'nginx' in response.json
+    assert len(response.json['nginx']) == 0
+
+
+def test_nginx_list_no_org(client, example_apps):
+    response = client.get(
+        '/nginx/',
+        headers={'X-User': 'test_user'})
+    assert response.status_code == 400
+
+
+def test_nginx_list_not_logged(client):
+    response = client.get(
+        '/nginx/?org=test-org')
+    assert response.status_code == 401

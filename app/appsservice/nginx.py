@@ -2,6 +2,8 @@ from flask import Blueprint, request, current_app
 from flask_restx import Api, Resource, fields
 import os
 import jinja2
+import glob
+import yaml
 from .helpers import auth_required
 from .common import create_project_if_needed
 
@@ -16,6 +18,16 @@ nginx_model = api.model(
             required=True,
             example="test-nginx"
         ),
+        'org': fields.String(
+            description="Organization that owns this app",
+            required=True,
+            example="test-org"
+        ),
+    }
+)
+nginx_query_model = api.model(
+    'Nginx',
+    {
         'org': fields.String(
             description="Organization that owns this app",
             required=True,
@@ -68,3 +80,18 @@ class Nginx(Resource):
             repo.remotes.origin.push().raise_if_error()
         current_app.config['gitsem'].release()
         return "Created", 201
+
+    @auth_required
+    def get(self):
+        org = request.args.get('org', None)
+        if not org:
+            return {'error': 'no org provided'}, 400
+        orgdir = os.path.join(current_app.config['gitdir'], org)
+        if not os.path.exists(orgdir):
+            return {'nginx': [], 'status': 'org does not exists'}
+        nginx = []
+        for file in glob.glob(orgdir+"/apps/*.yml"):
+            with open(file, "r") as f:
+                app = yaml.safe_load(f)
+            nginx.append({'name': app['metadata']['name']})
+        return {'nginx': nginx}
