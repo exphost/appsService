@@ -4,7 +4,7 @@ import os
 import jinja2
 import glob
 import yaml
-from .helpers import auth_required
+from .helpers import auth_required, git_pull
 from .common import create_project_if_needed
 
 bp = Blueprint('nginx', __name__, url_prefix='/nginx')
@@ -42,6 +42,7 @@ class Nginx(Resource):
     @api.expect(nginx_model, validate=True)
     @auth_required
     def post(self):
+        git_pull(current_app)
         gitdir = current_app.config['gitdir']
         ingitpath = os.path.join(
             request.json['org'],
@@ -83,6 +84,7 @@ class Nginx(Resource):
 
     @auth_required
     def get(self):
+        git_pull(current_app)
         org = request.args.get('org', None)
         if not org:
             return {'error': 'no org provided'}, 400
