@@ -4,7 +4,7 @@ import os
 import jinja2
 import glob
 import yaml
-from .helpers import auth_required, git_pull
+from .helpers import auth_required, git_pull, has_access_to_org
 from .common import create_project_if_needed
 
 bp = Blueprint('nginx', __name__, url_prefix='/nginx')
@@ -41,6 +41,7 @@ nginx_query_model = api.model(
 class Nginx(Resource):
     @api.expect(nginx_model, validate=True)
     @auth_required
+    @has_access_to_org
     def post(self):
         git_pull(current_app)
         gitdir = current_app.config['gitdir']
@@ -83,6 +84,7 @@ class Nginx(Resource):
         return "Created", 201
 
     @auth_required
+    @has_access_to_org
     def get(self):
         git_pull(current_app)
         org = request.args.get('org', None)

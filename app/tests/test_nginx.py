@@ -1,12 +1,15 @@
 import yaml
 
 
+USER="eyJpc3MiOiAiaHR0cHM6Ly9hdXRoLmdhdGV3YXktMzktZGV2LXBhc3MtdXNlci0wNWxzamMuY2kuZXhwaG9zdC5wbC9kZXgiLCAic3ViIjogIkNnZDBaWE4wTFhCeUVnUnNaR0Z3IiwgImF1ZCI6ICJleHBob3N0LWNvbnRyb2xsZXIiLCAiZXhwIjogMTY1MjE4MDM1MywgImlhdCI6IDE2NTIwOTM5NTMsICJhdF9oYXNoIjogIjc1a0NUUkRxTFFMU19XWjgyVUtXZGciLCAiZW1haWwiOiAidGVzdC1wckBtYWlsLnJ1IiwgImVtYWlsX3ZlcmlmaWVkIjogdHJ1ZSwgImdyb3VwcyI6IFsidGVzdC11c2VyIiwgInRlc3Qtb3JnIl0sICJuYW1lIjogInRlc3QtdXNlciJ9" # noqa
+
+
 def test_nginx_add(client):
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
               'name': 'add-app'},
-        headers={'X-User': 'test_user'})
+        headers={'X-User-Full': USER})
     assert response.status_code == 201
     with open("workdir/test-org/apps/add-app.yml", "r") as file:
         application = yaml.safe_load(file)
@@ -36,13 +39,13 @@ def test_nginx_add_duplicate(client):
         '/nginx/',
         json={'org': 'test-org',
               'name': 'add-app'},
-        headers={'X-User': 'test_user'})
+        headers={'X-User-Full': USER})
     assert response.status_code == 201
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
               'name': 'add-app'},
-        headers={'X-User': 'test_user'})
+        headers={'X-User-Full': USER})
     assert response.status_code == 409
 
 
@@ -64,7 +67,7 @@ def test_nginx_add_not_logged(client):
 def test_nginx_list(client):
     response = client.get(
         '/nginx/?org=test-org',
-        headers={'X-User': 'test_user'})
+        headers={'X-User-Full': USER})
     assert response.status_code == 200
     assert 'nginx' in response.json
     assert len(response.json['nginx']) == 3
@@ -75,14 +78,14 @@ def test_nginx_list(client):
 
     response = client.get(
         '/nginx/?org=test-org',
-        headers={'X-User': 'test_user'})
+        headers={'X-User-Full': USER})
     assert response.status_code == 200
 
 
 def test_nginx_list_empty_org(client):
     response = client.get(
-        '/nginx/?org=test-org2',
-        headers={'X-User': 'test_user'})
+        '/nginx/?org=test-user',
+        headers={'X-User-Full': USER})
     assert response.status_code == 200
     assert 'nginx' in response.json
     assert len(response.json['nginx']) == 0
@@ -91,7 +94,7 @@ def test_nginx_list_empty_org(client):
 def test_nginx_list_no_org(client):
     response = client.get(
         '/nginx/',
-        headers={'X-User': 'test_user'})
+        headers={'X-User-Full': USER})
     assert response.status_code == 400
 
 
@@ -99,3 +102,19 @@ def test_nginx_list_not_logged(client):
     response = client.get(
         '/nginx/?org=test-org')
     assert response.status_code == 401
+
+
+def test_nginx_add_wrong_org(client):
+    response = client.post(
+        '/nginx/',
+        json={'org': 'another-org',
+              'name': 'add-app'},
+        headers={'X-User-Full': USER})
+    assert response.status_code == 403
+
+
+def test_nginx_list_wrong_org(client):
+    response = client.get(
+        '/nginx/?org=another-org',
+        headers={'X-User-Full': USER})
+    assert response.status_code == 403
