@@ -34,6 +34,68 @@ def test_nginx_add(client):
                                                 }]
 
 
+def test_nginx_add_static_page(client):
+    response = client.post(
+        '/nginx/',
+        json={'org': 'test-org',
+              'name': 'add-app',
+              'git': {'repo': 'https://github.com/example/example.git',
+                      'branch': 'devel'},
+              'fqdn': 'example.example.com'},
+        headers={'X-User-Full': USER})
+    assert response.status_code == 201
+    with open("workdir/test-org/apps/add-app.yml", "r") as file:
+        application = yaml.safe_load(file)
+    assert application['kind'] == "Application"
+    assert application['metadata']['name'] == "add-app"
+    assert application['metadata']['namespace'] == "argocd"
+    assert application['spec']['destination']['namespace'] == "tenant-test-org"
+    assert application['spec']['project'] == "tenant-test-org"
+    source = application['spec']['source']
+    assert source['chart'] == "nginx"
+    assert source['targetRevision'] == "10.0.1"
+    assert source['helm']
+    assert source['repoURL'] == "https://charts.bitnami.com/bitnami"
+    values = yaml.safe_load(source['helm']['values'])
+    assert values['ingress']['enabled']
+    assert values['ingress']['hostname'] == "example.example.com"
+    assert values['service']['type'] == "ClusterIP"
+    git_val = values['cloneStaticSiteFromGit']
+    assert git_val['enabled']
+    assert git_val['repository'] == 'https://github.com/example/example.git'
+    assert git_val['branch'] == 'devel'
+
+
+def test_nginx_add_static_page_default_branch(client):
+    response = client.post(
+        '/nginx/',
+        json={'org': 'test-org',
+              'name': 'add-app',
+              'git': {'repo': 'https://github.com/example/example.git'},
+              'fqdn': 'example.example.com'},
+        headers={'X-User-Full': USER})
+    assert response.status_code == 201
+    with open("workdir/test-org/apps/add-app.yml", "r") as file:
+        application = yaml.safe_load(file)
+    source = application['spec']['source']
+    values = yaml.safe_load(source['helm']['values'])
+    git_val = values['cloneStaticSiteFromGit']
+    assert git_val['enabled']
+    assert git_val['repository'] == 'https://github.com/example/example.git'
+    assert git_val['branch'] == 'master'
+
+
+def test_nginx_add_static_page_missing_repo(client):
+    response = client.post(
+        '/nginx/',
+        json={'org': 'test-org',
+              'name': 'add-app',
+              'git': {'branch': 'devel'},
+              'fqdn': 'example.example.com'},
+        headers={'X-User-Full': USER})
+    assert response.status_code == 400
+
+
 def test_nginx_add_duplicate(client):
     response = client.post(
         '/nginx/',

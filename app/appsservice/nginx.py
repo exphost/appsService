@@ -23,6 +23,11 @@ nginx_model = api.model(
             required=True,
             example="test-org"
         ),
+        'git_repo': fields.String(
+            description="Static page git repository",
+            required=False,
+            example="https://github.com/example/example.git"
+        ),
     }
 )
 nginx_query_model = api.model(
@@ -58,6 +63,10 @@ class Nginx(Resource):
             return "App already exists", 409
         with open("appsservice/templates/application_helm.j2", "r") as file:
             template = jinja2.Template(file.read())
+        try:
+            values = self._generate_values(request)
+        except ValueError as e:
+            return str(e), 400
         app = template.render(
             name=request.json['name'],
             org=request.json['org'],
@@ -66,6 +75,7 @@ class Nginx(Resource):
             chart="nginx",
             version="10.0.1",
             repo="https://charts.bitnami.com/bitnami",
+            values=values
         )
         os.makedirs(os.path.dirname(apppath), exist_ok=True)
         current_app.config['gitsem'].acquire()
@@ -99,3 +109,21 @@ class Nginx(Resource):
                 app = yaml.safe_load(f)
             nginx.append({'name': app['metadata']['name']})
         return {'nginx': nginx}
+
+    def _generate_values(self, request):
+        values = {}
+        values['service'] = {'type': 'ClusterIP'}
+        fqdn = request.json.get('fqdn', None)
+        if fqdn:
+            values['ingress'] = {'enabled': True,
+                                 'hostname': fqdn,
+                                 'tls': True}
+        git = request.json.get('git', None)
+        if git:
+            if not git.get('repo', None):
+                raise ValueError("Repo is not defined")
+            branch = git.get('branch', 'master')
+            values['cloneStaticSiteFromGit'] = {'enabled': True,
+                                                'repository': git['repo'],
+                                                'branch': branch}
+        return values
