@@ -136,7 +136,12 @@ def test_nginx_list(client):
     apps = sorted(response.json['nginx'], key=lambda x: x['name'])
     assert apps[0]['name'] == "another-app"
     assert apps[1]['name'] == "new-app"
+    assert 'fqdn' not in apps[1]
+    assert 'git' not in apps[1]
     assert apps[2]['name'] == "test-app"
+    assert apps[2]['git']['repo'] == "https://github.com/example/example.git"
+    assert apps[2]['git']['branch'] == "master"
+    assert apps[2]['fqdn'] == "www.example.com"
 
     response = client.get(
         '/nginx/?org=test-org',

@@ -50,6 +50,7 @@ spec:
     chart: nginx
     helm:
       values: |-
+        {'service': {'type': 'ClusterIP'}, 'ingress': {'enabled': True, 'hostname': 'www.example.com', 'tls': True}, 'cloneStaticSiteFromGit': {'enabled': True, 'repository': 'https://github.com/example/example.git', 'branch': 'master'}}
 
   destination:
     server: 'https://kubernetes.default.svc'
@@ -60,7 +61,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-""")
+""") # noqa
     repo.index.add("test-org/apps/test-app.yml")
     with open("/tmp/qqq2/test-org/apps/another-app.yml", "w") as file:
         file.write("""

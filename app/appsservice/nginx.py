@@ -103,11 +103,7 @@ class Nginx(Resource):
         orgdir = os.path.join(current_app.config['gitdir'], org)
         if not os.path.exists(orgdir):
             return {'nginx': [], 'status': 'org does not exists'}
-        nginx = []
-        for file in glob.glob(orgdir+"/apps/*.yml"):
-            with open(file, "r") as f:
-                app = yaml.safe_load(f)
-            nginx.append({'name': app['metadata']['name']})
+        nginx = self._list_nginx_apps(orgdir)
         return {'nginx': nginx}
 
     def _generate_values(self, request):
@@ -127,3 +123,36 @@ class Nginx(Resource):
                                                 'repository': git['repo'],
                                                 'branch': branch}
         return values
+
+    def _list_nginx_apps(self, orgdir):
+        nginx = []
+        for file in glob.glob(orgdir+"/apps/*.yml"):
+            with open(file, "r") as f:
+                app = yaml.safe_load(f)
+            r_values = yaml.safe_load(app['spec']['source']['helm']['values'])
+            values = self._map_app_to_values(r_values) if r_values else {}
+            print("VAL: ", values)
+            nginx.append({'name': app['metadata']['name'], **values})
+        return nginx
+
+    def _map_app_to_values(self, values):
+        result = {}
+        values_mapping = [
+            (('git', 'repo'), ('cloneStaticSiteFromGit', 'repository')),
+            (('git', 'branch'), ('cloneStaticSiteFromGit', 'branch')),
+            (('fqdn',), ('ingress', 'hostname')),
+        ]
+        for mapping in values_mapping:
+            tmp_value = values
+            for k in mapping[1][:-1]:
+                tmp_value = tmp_value.get(k, {})
+            tmp_value = tmp_value.get(mapping[1][-1], "__SKIP__")
+            if tmp_value == "__SKIP__":
+                continue
+            tmp_key = result
+            for k in mapping[0][:-1]:
+                if k not in tmp_key:
+                    tmp_key[k] = {}
+                tmp_key = tmp_key[k]
+            tmp_key[mapping[0][-1]] = tmp_value
+        return result
