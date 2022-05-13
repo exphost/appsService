@@ -29,6 +29,10 @@ spec:
           env:
             - name: GIT_REPO
               value: {{ .Values.git_repo.url }}
+{{- if .Values.git_repo.subpath }}
+            - name: GIT_SUBPATH
+              value: {{ .Values.git_repo.subpath }}
+{{- end }}
           ports:
             - name: http
               containerPort: 5000

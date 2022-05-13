@@ -7,6 +7,8 @@ global:
 
 git_repo:
   url: "git@gitlab.exphost.pl:exphost-controller/test_tenants_repo.git"
+  ### Subdirectory to use to store manifests
+  # subpath: ""
   sshkey:
     secret: {}
       #name: existing_secret

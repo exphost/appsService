@@ -2,8 +2,9 @@ import os
 import jinja2
 
 
-def create_project_if_needed(org, repo, gitdir):
+def create_project_if_needed(subpath, org, repo, gitdir):
     ingit_project_path = os.path.join(
+        subpath,
         org,
         "project.yml"
     )

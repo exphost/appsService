@@ -51,6 +51,7 @@ class Nginx(Resource):
         git_pull(current_app)
         gitdir = current_app.config['gitdir']
         ingitpath = os.path.join(
+            current_app.config['git_subpath'],
             request.json['org'],
             "apps",
             request.json['name']+".yml"
@@ -79,7 +80,8 @@ class Nginx(Resource):
         )
         os.makedirs(os.path.dirname(apppath), exist_ok=True)
         current_app.config['gitsem'].acquire()
-        create_project_if_needed(request.json['org'],
+        create_project_if_needed(current_app.config['git_subpath'],
+                                 request.json['org'],
                                  current_app.config['repo'],
                                  gitdir)
         with open(apppath, 'w') as file:
@@ -100,7 +102,10 @@ class Nginx(Resource):
         org = request.args.get('org', None)
         if not org:
             return {'error': 'no org provided'}, 400
-        orgdir = os.path.join(current_app.config['gitdir'], org)
+        orgdir = os.path.join(
+            current_app.config['gitdir'],
+            current_app.config['git_subpath'],
+            org)
         if not os.path.exists(orgdir):
             return {'nginx': [], 'status': 'org does not exists'}
         nginx = self._list_nginx_apps(orgdir)

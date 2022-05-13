@@ -185,3 +185,46 @@ def test_nginx_list_wrong_org(client):
         '/nginx/?org=another-org',
         headers={'X-User-Full': USER})
     assert response.status_code == 403
+
+
+def test_nginx_list_with_prefix(client_with_subpath):
+    response = client_with_subpath.get(
+        '/nginx/?org=test-org',
+        headers={'X-User-Full': USER})
+    assert response.status_code == 200
+    assert 'nginx' in response.json
+    assert len(response.json['nginx']) == 1
+    apps = sorted(response.json['nginx'], key=lambda x: x['name'])
+    assert apps[0]['name'] == "new-app2"
+    assert 'fqdn' not in apps[0]
+    assert 'git' not in apps[0]
+
+
+def test_nginx_add_with_prefix(client_with_subpath):
+    response = client_with_subpath.post(
+        '/nginx/',
+        json={'org': 'test-org',
+              'name': 'add-app3'},
+        headers={'X-User-Full': USER})
+    assert response.status_code == 201
+    with open("workdir/tenants/test-org/apps/add-app3.yml", "r") as file:
+        application = yaml.safe_load(file)
+    assert application['kind'] == "Application"
+    assert application['metadata']['name'] == "add-app3"
+    assert application['metadata']['namespace'] == "argocd"
+    assert application['spec']['destination']['namespace'] == "tenant-test-org"
+    assert application['spec']['project'] == "tenant-test-org"
+    source = application['spec']['source']
+    assert source['chart'] == "nginx"
+    assert source['targetRevision'] == "10.0.1"
+    assert source['helm']
+    assert source['repoURL'] == "https://charts.bitnami.com/bitnami"
+
+    with open("workdir/tenants/test-org/project.yml", "r") as file:
+        project = yaml.safe_load(file)
+    assert project['kind'] == "AppProject"
+    assert project['metadata']['name'] == "test-org"
+    assert project['metadata']['namespace'] == "argocd"
+    assert project['spec']['destinations'] == [{'namespace': 'tenant-test-org',
+                                                'server': '*'
+                                                }]

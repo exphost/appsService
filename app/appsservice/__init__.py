@@ -13,6 +13,7 @@ def create_app(test_config=None):
     if not app.config['GIT_REPO']:
         app.logger.error("GIT_REPO not provided")
         return False
+    app.config['git_subpath'] = os.environ.get("GIT_SUBPATH", "")
     app.config['gitdir'] = "workdir"
     app.config['ssh_cmd'] = ("ssh "
                              "-o StrictHostKeyChecking=no "
