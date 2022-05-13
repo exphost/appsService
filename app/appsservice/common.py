@@ -16,7 +16,7 @@ def create_project_if_needed(subpath, org, repo, gitdir):
     if not os.path.exists(project_path):
         with open("appsservice/templates/appproject.yml.j2", "r") as file:
             template = jinja2.Template(file.read())
-        project = template.render(name=org,
+        project = template.render(name="tenant-"+org,
                                   namespace="tenant-"+org)
         with open(project_path, "w") as file:
             file.write(project)

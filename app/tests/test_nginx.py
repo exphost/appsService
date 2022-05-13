@@ -27,7 +27,7 @@ def test_nginx_add(client):
     with open("workdir/test-org/project.yml", "r") as file:
         project = yaml.safe_load(file)
     assert project['kind'] == "AppProject"
-    assert project['metadata']['name'] == "test-org"
+    assert project['metadata']['name'] == "tenant-test-org"
     assert project['metadata']['namespace'] == "argocd"
     assert project['spec']['destinations'] == [{'namespace': 'tenant-test-org',
                                                 'server': '*'
@@ -223,7 +223,7 @@ def test_nginx_add_with_prefix(client_with_subpath):
     with open("workdir/tenants/test-org/project.yml", "r") as file:
         project = yaml.safe_load(file)
     assert project['kind'] == "AppProject"
-    assert project['metadata']['name'] == "test-org"
+    assert project['metadata']['name'] == "tenant-test-org"
     assert project['metadata']['namespace'] == "argocd"
     assert project['spec']['destinations'] == [{'namespace': 'tenant-test-org',
                                                 'server': '*'
