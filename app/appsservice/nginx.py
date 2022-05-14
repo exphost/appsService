@@ -113,12 +113,23 @@ class Nginx(Resource):
 
     def _generate_values(self, request):
         values = {}
+        hostname = "{name}.{org}.{domain}".format(
+                    name=request.json['name'],
+                    org=request.json['org'],
+                    domain=current_app.config['USERS_DOMAIN']
+                    )
         values['service'] = {'type': 'ClusterIP'}
-        fqdn = request.json.get('fqdn', None)
-        if fqdn:
-            values['ingress'] = {'enabled': True,
-                                 'hostname': fqdn,
-                                 'tls': True}
+        values['ingress'] = {'enabled': True,
+                             'hostname': hostname,
+                             'tls': True}
+        fqdns = request.json.get('fqdns', None)
+        if fqdns:
+            values['ingress']['extraHosts'] = []
+            for f in fqdns:
+                values['ingress']['extraHosts'].append({
+                    'name': f,
+                    'path': '/'
+                    })
         git = request.json.get('git', None)
         if git:
             if not git.get('repo', None):
@@ -141,11 +152,18 @@ class Nginx(Resource):
         return nginx
 
     def _map_app_to_values(self, values):
+        def get_fqdns(values):
+            if not values:
+                return []
+            hosts = [values.get('hostname'), ]
+            hosts += [i['name'] for i in values.get('extraHosts', [])]
+            return hosts
+
         result = {}
         values_mapping = [
             (('git', 'repo'), ('cloneStaticSiteFromGit', 'repository')),
             (('git', 'branch'), ('cloneStaticSiteFromGit', 'branch')),
-            (('fqdn',), ('ingress', 'hostname')),
+            (('fqdns',), ('ingress',), get_fqdns)
         ]
         for mapping in values_mapping:
             tmp_value = values
@@ -154,6 +172,9 @@ class Nginx(Resource):
             tmp_value = tmp_value.get(mapping[1][-1], "__SKIP__")
             if tmp_value == "__SKIP__":
                 continue
+            if len(mapping) > 2:
+                tmp_value = mapping[2](tmp_value)
+
             tmp_key = result
             for k in mapping[0][:-1]:
                 if k not in tmp_key:

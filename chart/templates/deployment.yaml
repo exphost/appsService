@@ -33,6 +33,8 @@ spec:
             - name: GIT_SUBPATH
               value: {{ .Values.git_repo.subpath }}
 {{- end }}
+            - name: USERS_DOMAIN
+              value: {{ .Values.users_domain }}
           ports:
             - name: http
               containerPort: 5000

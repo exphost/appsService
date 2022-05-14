@@ -13,6 +13,7 @@ def gitinit():
 def app():
     gitinit()
     os.environ['GIT_REPO'] = "/tmp/qqq"
+    os.environ['USERS_DOMAIN'] = "users.example.com"
     example_apps()
     app = create_app()
     example_apps2()
@@ -67,7 +68,7 @@ spec:
     chart: nginx
     helm:
       values: |-
-        {'service': {'type': 'ClusterIP'}, 'ingress': {'enabled': True, 'hostname': 'www.example.com', 'tls': True}, 'cloneStaticSiteFromGit': {'enabled': True, 'repository': 'https://github.com/example/example.git', 'branch': 'master'}}
+        {'service': {'type': 'ClusterIP'}, 'ingress': {'enabled': True, 'hostname': 'test-app.test-org.users.example.com', 'tls': True, 'extraHosts': [{'name': 'www.example.com', 'path': '/'}]}, 'cloneStaticSiteFromGit': {'enabled': True, 'repository': 'https://github.com/example/example.git', 'branch': 'master', }}
 
   destination:
     server: 'https://kubernetes.default.svc'

@@ -41,7 +41,7 @@ def test_nginx_add_static_page(client):
               'name': 'add-app',
               'git': {'repo': 'https://github.com/example/example.git',
                       'branch': 'devel'},
-              'fqdn': 'example.example.com'},
+              'fqdns': ['example.example.com', 'www2.example.ru']},
         headers={'X-User-Full': USER})
     assert response.status_code == 201
     with open("workdir/test-org/apps/add-app.yml", "r") as file:
@@ -58,7 +58,10 @@ def test_nginx_add_static_page(client):
     assert source['repoURL'] == "https://charts.bitnami.com/bitnami"
     values = yaml.safe_load(source['helm']['values'])
     assert values['ingress']['enabled']
-    assert values['ingress']['hostname'] == "example.example.com"
+    assert values['ingress']['hostname'] == "add-app.test-org.users.example.com" # noqa
+    extra_hosts = [x['name'] for x in values['ingress']['extraHosts']]
+    assert "example.example.com" in extra_hosts
+    assert "www2.example.ru" in extra_hosts
     assert values['service']['type'] == "ClusterIP"
     git_val = values['cloneStaticSiteFromGit']
     assert git_val['enabled']
@@ -72,7 +75,7 @@ def test_nginx_add_static_page_default_branch(client):
         json={'org': 'test-org',
               'name': 'add-app',
               'git': {'repo': 'https://github.com/example/example.git'},
-              'fqdn': 'example.example.com'},
+              'fqdns': ['example.example.com']},
         headers={'X-User-Full': USER})
     assert response.status_code == 201
     with open("workdir/test-org/apps/add-app.yml", "r") as file:
@@ -91,7 +94,7 @@ def test_nginx_add_static_page_missing_repo(client):
         json={'org': 'test-org',
               'name': 'add-app',
               'git': {'branch': 'devel'},
-              'fqdn': 'example.example.com'},
+              'fqdns': ['example.example.com']},
         headers={'X-User-Full': USER})
     assert response.status_code == 400
 
@@ -136,12 +139,12 @@ def test_nginx_list(client):
     apps = sorted(response.json['nginx'], key=lambda x: x['name'])
     assert apps[0]['name'] == "another-app"
     assert apps[1]['name'] == "new-app"
-    assert 'fqdn' not in apps[1]
     assert 'git' not in apps[1]
     assert apps[2]['name'] == "test-app"
     assert apps[2]['git']['repo'] == "https://github.com/example/example.git"
     assert apps[2]['git']['branch'] == "master"
-    assert apps[2]['fqdn'] == "www.example.com"
+    assert "www.example.com" in apps[2]['fqdns']
+    assert "test-app.test-org.users.example.com" in apps[2]['fqdns']
 
     response = client.get(
         '/nginx/?org=test-org',
@@ -196,7 +199,6 @@ def test_nginx_list_with_prefix(client_with_subpath):
     assert len(response.json['nginx']) == 1
     apps = sorted(response.json['nginx'], key=lambda x: x['name'])
     assert apps[0]['name'] == "new-app2"
-    assert 'fqdn' not in apps[0]
     assert 'git' not in apps[0]
 
 
