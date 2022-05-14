@@ -121,7 +121,11 @@ class Nginx(Resource):
         values['service'] = {'type': 'ClusterIP'}
         values['ingress'] = {'enabled': True,
                              'hostname': hostname,
-                             'tls': True}
+                             'tls': True,
+                             'annotations': {
+                               'cert-manager.io/cluster-issuer': 'acme-issuer'
+                               }
+                             }
         fqdns = request.json.get('fqdns', None)
         if fqdns:
             values['ingress']['extraHosts'] = []

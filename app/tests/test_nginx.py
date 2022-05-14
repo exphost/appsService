@@ -59,6 +59,7 @@ def test_nginx_add_static_page(client):
     values = yaml.safe_load(source['helm']['values'])
     assert values['ingress']['enabled']
     assert values['ingress']['hostname'] == "add-app.test-org.users.example.com" # noqa
+    assert values['ingress']['annotations']['cert-manager.io/cluster-issuer']
     extra_hosts = [x['name'] for x in values['ingress']['extraHosts']]
     assert "example.example.com" in extra_hosts
     assert "www2.example.ru" in extra_hosts
