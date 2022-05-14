@@ -122,6 +122,7 @@ class Nginx(Resource):
         values['ingress'] = {'enabled': True,
                              'hostname': hostname,
                              'tls': True,
+                             'certManager': True,
                              'annotations': {
                                'cert-manager.io/cluster-issuer': 'acme-issuer'
                                }
