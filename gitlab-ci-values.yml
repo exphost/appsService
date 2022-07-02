@@ -17,6 +17,10 @@ gateway:
 appsservice:
   enabled: false
 
+landingpage:
+  ingress:
+    hostname: __DOMAIN__
+
 adminPassword:
   password: "pass123"
 configAdminPassword:
