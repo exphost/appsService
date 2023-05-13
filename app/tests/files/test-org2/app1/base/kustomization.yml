@@ -1,0 +1,11 @@
+---
+helmCharts:
+- name: generic-app
+  repo: https://gitlab.exphost.pl/charts
+  version: v0.0.0-3-ge9ad446
+  releaseName: frontend
+  valuesInline:
+    image:
+      repository: mysql
+      tag: v1.2.3
+    _type: mysql

@@ -1,11 +1,6 @@
 from flask import Blueprint, request, current_app
 from flask_restx import Api, Resource, fields
-import os
-import jinja2
-import glob
-import yaml
-from .helpers import auth_required, git_pull, has_access_to_org
-from .common import create_project_if_needed
+from .helpers import auth_required, has_access_to_org
 
 bp = Blueprint('nginx', __name__, url_prefix='/nginx')
 api = Api(bp, doc='/')
@@ -14,7 +9,7 @@ nginx_model = api.model(
     'Nginx',
     {
         'name': fields.String(
-            description="App name",
+            description="component name",
             required=True,
             example="test-nginx"
         ),
@@ -22,6 +17,11 @@ nginx_model = api.model(
             description="Organization that owns this app",
             required=True,
             example="test-org"
+        ),
+        'app_name': fields.String(
+            description="App name",
+            required=True,
+            example="app1"
         ),
         'git_repo': fields.String(
             description="Static page git repository",
@@ -38,6 +38,11 @@ nginx_query_model = api.model(
             required=True,
             example="test-org"
         ),
+        'app_name': fields.String(
+            description="App name",
+            required=False,
+            example="app1"
+        ),
     }
 )
 
@@ -48,70 +53,58 @@ class Nginx(Resource):
     @auth_required
     @has_access_to_org
     def post(self):
-        git_pull(current_app)
-        gitdir = current_app.config['gitdir']
-        ingitpath = os.path.join(
-            current_app.config['git_subpath'],
-            request.json['org'],
-            "apps",
-            request.json['name']+".yml"
-        )
-        apppath = os.path.join(
-            gitdir,
-            ingitpath
-        )
-        if os.path.exists(apppath):
-            return "App already exists", 409
-        with open("appsservice/templates/application_helm.j2", "r") as file:
-            template = jinja2.Template(file.read())
+        dao = current_app.dao
         try:
-            values = self._generate_values(request)
+            dao.get_app(request.json['org'], request.json['app_name'])
+        except FileNotFoundError:
+            return {'error': 'app not found'}, 404
+        try:
+            dao.get_component(
+                request.json['org'],
+                request.json['app_name'],
+                request.json['name'])
+            return {'error': 'component already exists'}, 409
+        except FileNotFoundError:
+            pass
+        try:
+            values = self._params_to_helm_values(request)
         except ValueError as e:
-            return str(e), 400
-        app = template.render(
-            name=request.json['name'],
-            org=request.json['org'],
-            namespace="tenant-" + request.json['org'],
-            project="tenant-" + request.json['org'],
-            chart="nginx",
-            version="10.0.1",
-            repo="https://charts.bitnami.com/bitnami",
-            values=values
-        )
-        os.makedirs(os.path.dirname(apppath), exist_ok=True)
-        current_app.config['gitsem'].acquire()
-        create_project_if_needed(current_app.config['git_subpath'],
-                                 request.json['org'],
-                                 current_app.config['repo'],
-                                 gitdir)
-        with open(apppath, 'w') as file:
-            file.write(app)
-        repo = current_app.config['repo']
-        repo.index.add(ingitpath)
-        repo.index.commit("add nginx")
-        ssh_cmd = current_app.config['ssh_cmd']
-        with repo.git.custom_environment(GIT_SSH_COMMAND=ssh_cmd):
-            repo.remotes.origin.push().raise_if_error()
-        current_app.config['gitsem'].release()
-        return "Created", 201
+            return {'error': str(e)}, 400
+        values['_type'] = "nginx"
+        component = {
+            "name": "nginx",
+            "releaseName": request.json['name'],
+            "repo": "https//gitlab.exphost.pl/charts",
+            "version": "10.0.1",
+            "valuesInline": values,
+        }
+        if not dao.update_component(
+                request.json['org'],
+                request.json['app_name'],
+                component):
+            return {'error': 'failed to update component'}, 500
+        return {'status': 'created'}, 201
 
     @auth_required
     @has_access_to_org
     def get(self):
-        git_pull(current_app)
         org = request.args.get('org', None)
-        if not org:
-            return {'error': 'no org provided'}, 400
-        orgdir = os.path.join(
-            current_app.config['gitdir'],
-            current_app.config['git_subpath'],
-            org)
-        if not os.path.exists(orgdir):
-            return {'nginx': [], 'status': 'org does not exists'}
-        nginx = self._list_nginx_apps(orgdir)
-        return {'nginx': nginx}
+        app_name = request.args.get('app_name', None)
+        if not app_name:
+            return {'error': 'no app_name provided'}, 400
+        try:
+            components = current_app.dao.get_app(org, app_name)
+        except FileNotFoundError:
+            return {'error': 'app not found'}, 404
+        nginxs = list(map(
+            self._helm_values_to_params,
+            filter(
+                lambda x: x['valuesInline']['_type'] == 'nginx',
+                components)))
+        print(nginxs)
+        return {'nginx': nginxs}
 
-    def _generate_values(self, request):
+    def _params_to_helm_values(self, request):
         values = {}
         hostname = "{name}.{org}.{domain}".format(
                     name=request.json['name'],
@@ -145,18 +138,7 @@ class Nginx(Resource):
                                                 'branch': branch}
         return values
 
-    def _list_nginx_apps(self, orgdir):
-        nginx = []
-        for file in glob.glob(orgdir+"/apps/*.yml"):
-            with open(file, "r") as f:
-                app = yaml.safe_load(f)
-            r_values = yaml.safe_load(app['spec']['source']['helm']['values'])
-            values = self._map_app_to_values(r_values) if r_values else {}
-            print("VAL: ", values)
-            nginx.append({'name': app['metadata']['name'], **values})
-        return nginx
-
-    def _map_app_to_values(self, values):
+    def _helm_values_to_params(self, values):
         def get_fqdns(values):
             if not values:
                 return []
@@ -164,14 +146,14 @@ class Nginx(Resource):
             hosts += [i['name'] for i in values.get('extraHosts', [])]
             return hosts
 
-        result = {}
+        result = {'name': values['releaseName']}
         values_mapping = [
             (('git', 'repo'), ('cloneStaticSiteFromGit', 'repository')),
             (('git', 'branch'), ('cloneStaticSiteFromGit', 'branch')),
             (('fqdns',), ('ingress',), get_fqdns)
         ]
         for mapping in values_mapping:
-            tmp_value = values
+            tmp_value = values['valuesInline']
             for k in mapping[1][:-1]:
                 tmp_value = tmp_value.get(k, {})
             tmp_value = tmp_value.get(mapping[1][-1], "__SKIP__")

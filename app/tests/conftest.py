@@ -5,24 +5,29 @@ import git
 import shutil
 
 
+def get_path_temp_dir(subpath=""):
+    return os.path.join(os.path.realpath(os.path.curdir), "temp_dir", subpath)
+
+
 def gitinit():
-    git.Repo.init("/tmp/qqq", bare=True)
+    git.Repo.init(os.environ['GIT_REPO'], bare=True)
 
 
 @pytest.fixture
 def app():
-    gitinit()
-    os.environ['GIT_REPO'] = "/tmp/qqq"
+    shutil.rmtree(get_path_temp_dir(), ignore_errors=True)
+    shutil.rmtree("workdir", ignore_errors=True)
+
+    os.environ['GIT_REPO'] = get_path_temp_dir("repo")
     os.environ['USERS_DOMAIN'] = "users.example.com"
+    gitinit()
     example_apps()
     app = create_app()
     example_apps2()
+    app.dao.list_apps("test-org")
     example_apps3()
     yield app
-    shutil.rmtree("/tmp/qqq")
-    shutil.rmtree("/tmp/qqq2")
-    shutil.rmtree("/tmp/qqq3")
-    shutil.rmtree("/tmp/qqq4")
+    shutil.rmtree(get_path_temp_dir())
     shutil.rmtree("workdir")
 
 
@@ -47,145 +52,51 @@ def client_with_subpath(app_with_subpath):
 
 
 def example_apps():
-    repo = git.Repo.clone_from("/tmp/qqq",
-                               "/tmp/qqq2")
-    os.makedirs("/tmp/qqq2/test-org/apps", exist_ok=True)
-    with open("/tmp/qqq2/test-org/apps/test-app.yml", "w") as file:
-        file.write("""
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: test-app
-  namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: tenant-test-org
-  source:
-    repoURL: https://charts.bitnami.com/bitnami
-    targetRevision: 10.0.1
-    chart: nginx
-    helm:
-      values: |-
-        {'service': {'type': 'ClusterIP'}, 'ingress': {'enabled': True, 'hostname': 'test-app.test-org.users.example.com', 'tls': True, 'extraHosts': [{'name': 'www.example.com', 'path': '/'}]}, 'cloneStaticSiteFromGit': {'enabled': True, 'repository': 'https://github.com/example/example.git', 'branch': 'master', }}
-
-  destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: tenant-test-org
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-""") # noqa
-    repo.index.add("test-org/apps/test-app.yml")
-    with open("/tmp/qqq2/test-org/apps/another-app.yml", "w") as file:
-        file.write("""
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: another-app
-  namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: tenant-test-org
-  source:
-    repoURL: https://charts.bitnami.com/bitnami
-    targetRevision: 10.0.1
-    chart: nginx
-    helm:
-      values: |-
-
-  destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: tenant-test-org
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-""")
-    repo.index.add("test-org/apps/another-app.yml")
+    p = get_path_temp_dir("update1")
+    repo = git.Repo.clone_from(os.environ['GIT_REPO'], p)
+    app1_subpath = "test-org/app1/base"
+    app1_path = os.path.join(p, app1_subpath)
+    os.makedirs(app1_path, exist_ok=True)
+    with open(os.path.join(app1_path, "kustomization.yml"), "w") as file:
+        file.write(
+            open("tests/files/test-org/app1/base/kustomization.yml").read()
+        )
+    app2_path = os.path.join(p, "test-org/app2/base")
+    os.makedirs(app2_path, exist_ok=True)
+    with open(os.path.join(app2_path, "kustomization.yml"), "w") as file:
+        file.write(
+            open("tests/files/test-org/app2/base/kustomization.yml").read())
+    repo.index.add("test-org/app1/base/kustomization.yml")
+    repo.index.add("test-org/app2/base/kustomization.yml")
     repo.index.commit("example apps")
     repo.remotes.origin.push().raise_if_error()
 
 
 def example_apps2():
-    repo = git.Repo.clone_from("/tmp/qqq",
-                               "/tmp/qqq3")
-    os.makedirs("/tmp/qqq3/test-org/apps", exist_ok=True)
-    with open("/tmp/qqq3/test-org/apps/new-app.yml", "w") as file:
-        file.write("""
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: new-app
-  namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: tenant-test-org
-  source:
-    repoURL: https://charts.bitnami.com/bitnami
-    targetRevision: 10.0.1
-    chart: nginx
-    helm:
-      values: |-
-
-  destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: tenant-test-org
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-""")
-    repo.index.add("test-org/apps/new-app.yml")
-    repo.index.commit("new apps")
+    p = get_path_temp_dir("update2")
+    repo = git.Repo.clone_from(os.environ['GIT_REPO'], p)
+    app1_path = os.path.join(p, "test-org/app1/base")
+    app2_path = os.path.join(p, "test-org2/app1/base")
+    with open(os.path.join(app1_path, "kustomization.yml"), "w") as file:
+        file.write(
+            open("tests/files/test-org/app1/base/kustomization2.yml").read())
+    os.makedirs(app2_path, exist_ok=True)
+    with open(os.path.join(app2_path, "kustomization.yml"), "w") as file:
+        file.write(
+            open("tests/files/test-org2/app1/base/kustomization.yml").read())
+    repo.index.add("test-org/app1/base/kustomization.yml")
+    repo.index.add("test-org2/app1/base/kustomization.yml")
+    repo.index.commit("example apps2")
     repo.remotes.origin.push().raise_if_error()
 
 
 def example_apps3():
-    repo = git.Repo.clone_from("/tmp/qqq",
-                               "/tmp/qqq4")
-    os.makedirs("/tmp/qqq4/tenants/test-org/apps", exist_ok=True)
-    with open("/tmp/qqq4/tenants/test-org/apps/new-app2.yml", "w") as file:
-        file.write("""
----
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: new-app2
-  namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
-spec:
-  project: tenant-test-org
-  source:
-    repoURL: https://charts.bitnami.com/bitnami
-    targetRevision: 10.0.1
-    chart: nginx
-    helm:
-      values: |-
-
-  destination:
-    server: 'https://kubernetes.default.svc'
-    namespace: tenant-test-org
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-""")
-    repo.index.add("tenants/test-org/apps/new-app2.yml")
-    repo.index.commit("new apps2")
+    p = get_path_temp_dir("update3")
+    repo = git.Repo.clone_from(os.environ['GIT_REPO'], p)
+    app1_path = os.path.join(p, "test-org/app1/base")
+    with open(os.path.join(app1_path, "kustomization.yml"), "w") as file:
+        file.write(
+            open("tests/files/test-org/app1/base/kustomization3.yml").read())
+    repo.index.add("test-org/app1/base/kustomization.yml")
+    repo.index.commit("example apps3")
     repo.remotes.origin.push().raise_if_error()

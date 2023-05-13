@@ -1,8 +1,7 @@
 from flask import Flask
-import git
 import os
 from . import nginx
-import threading
+from . import dao
 
 
 def create_app(test_config=None):
@@ -18,17 +17,7 @@ def create_app(test_config=None):
         app.logger.error("USERS_DOMAIN not provided")
         return False
     app.config['git_subpath'] = os.environ.get("GIT_SUBPATH", "")
-    app.config['gitdir'] = "workdir"
-    app.config['ssh_cmd'] = ("ssh "
-                             "-o StrictHostKeyChecking=no "
-                             "-o UserKnownHostsFile=/dev/null "
-                             "-i /app/sshkey/id_rsa"
-                             )
-    repo = git.Repo.clone_from(app.config['GIT_REPO'],
-                               app.config['gitdir'],
-                               env=dict(GIT_SSH_COMMAND=app.config['ssh_cmd']))
-    app.config['repo'] = repo
-    app.config['gitsem'] = threading.Semaphore()
+    app.dao = dao.AppsDao(app.config['GIT_REPO'], app.config['git_subpath'])
 
     app.register_blueprint(nginx.bp)
     return app

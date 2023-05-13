@@ -1,0 +1,18 @@
+---
+helmCharts:
+- name: generic-app
+  repo: https://gitlab.exphost.pl/charts
+  version: v0.0.0-3-ge9ad446
+  releaseName: frontend
+  valuesInline:
+    image:
+      repository: registry.gitlab.exphost.pl/onelink/onelink-frontend
+      tag: v0.0.0-5-g2b2479d
+    imagePullSecrets:
+    - name: onelink-reg
+    _type: asd
+- name: generic-app
+  repo: https://gitlab.exphost.pl/charts
+  version: v0.0.0-3-ge9ad446
+  releaseName: app2
+

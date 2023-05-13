@@ -25,10 +25,3 @@ def has_access_to_org(fn):
             return {'error': 'Org not permitted'}, 403
         return fn(*args, **kwargs)
     return wrapper
-
-
-def git_pull(app):
-    app.config['gitsem'].acquire()
-    repo = app.config['repo']
-    repo.remotes.origin.pull()
-    app.config['gitsem'].release()

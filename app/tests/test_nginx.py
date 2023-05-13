@@ -1,98 +1,148 @@
-import yaml
-
-
 USER="eyJpc3MiOiAiaHR0cHM6Ly9hdXRoLmdhdGV3YXktMzktZGV2LXBhc3MtdXNlci0wNWxzamMuY2kuZXhwaG9zdC5wbC9kZXgiLCAic3ViIjogIkNnZDBaWE4wTFhCeUVnUnNaR0Z3IiwgImF1ZCI6ICJleHBob3N0LWNvbnRyb2xsZXIiLCAiZXhwIjogMTY1MjE4MDM1MywgImlhdCI6IDE2NTIwOTM5NTMsICJhdF9oYXNoIjogIjc1a0NUUkRxTFFMU19XWjgyVUtXZGciLCAiZW1haWwiOiAidGVzdC1wckBtYWlsLnJ1IiwgImVtYWlsX3ZlcmlmaWVkIjogdHJ1ZSwgImdyb3VwcyI6IFsidGVzdC11c2VyIiwgInRlc3Qtb3JnIl0sICJuYW1lIjogInRlc3QtdXNlciJ9" # noqa
 
 
-def test_nginx_add(client):
+def test_nginx_add(client, app):
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
-              'name': 'add-app'},
+              'app_name': 'app1',
+              'name': 'add-app1'},
         headers={'X-User-Full': USER})
     assert response.status_code == 201
-    with open("workdir/test-org/apps/add-app.yml", "r") as file:
-        application = yaml.safe_load(file)
-    assert application['kind'] == "Application"
-    assert application['metadata']['name'] == "add-app"
-    assert application['metadata']['namespace'] == "argocd"
-    assert application['spec']['destination']['namespace'] == "tenant-test-org"
-    assert application['spec']['project'] == "tenant-test-org"
-    source = application['spec']['source']
-    assert source['chart'] == "nginx"
-    assert source['targetRevision'] == "10.0.1"
-    assert source['helm']
-    assert source['repoURL'] == "https://charts.bitnami.com/bitnami"
 
-    with open("workdir/test-org/project.yml", "r") as file:
-        project = yaml.safe_load(file)
-    assert project['kind'] == "AppProject"
-    assert project['metadata']['name'] == "tenant-test-org"
-    assert project['metadata']['namespace'] == "argocd"
-    assert project['spec']['destinations'] == [{'namespace': 'tenant-test-org',
-                                                'server': '*'
-                                                }]
+    component = app.dao.get_component(
+        org="test-org",
+        app="app1",
+        component="add-app1")
+    assert component == {
+        'name': 'nginx',
+        'releaseName': 'add-app1',
+        'repo': 'https//gitlab.exphost.pl/charts',
+        'version': '10.0.1',
+        'valuesInline': {
+            '_type': 'nginx',
+            'ingress': {
+                'enabled': True,
+                'hostname': 'add-app1.test-org.users.example.com',
+                'annotations': {
+                    'cert-manager.io/cluster-issuer': 'acme-issuer',
+                },
+                'tls': True,
+                'certManager': True,
+            },
+            'service': {
+                'type': 'ClusterIP',
+            },
+        },
+    }
 
 
-def test_nginx_add_static_page(client):
+def test_nginx_add_non_existing_app(client, app):
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
-              'name': 'add-app',
+              'app_name': 'app10',
+              'name': 'add-app1'},
+        headers={'X-User-Full': USER})
+    assert response.status_code == 404
+
+
+def test_nginx_add_static_page(client, app):
+    response = client.post(
+        '/nginx/',
+        json={'org': 'test-org',
+              'app_name': 'app1',
+              'name': 'add-app2',
               'git': {'repo': 'https://github.com/example/example.git',
                       'branch': 'devel'},
               'fqdns': ['example.example.com', 'www2.example.ru']},
         headers={'X-User-Full': USER})
     assert response.status_code == 201
-    with open("workdir/test-org/apps/add-app.yml", "r") as file:
-        application = yaml.safe_load(file)
-    assert application['kind'] == "Application"
-    assert application['metadata']['name'] == "add-app"
-    assert application['metadata']['namespace'] == "argocd"
-    assert application['spec']['destination']['namespace'] == "tenant-test-org"
-    assert application['spec']['project'] == "tenant-test-org"
-    source = application['spec']['source']
-    assert source['chart'] == "nginx"
-    assert source['targetRevision'] == "10.0.1"
-    assert source['helm']
-    assert source['repoURL'] == "https://charts.bitnami.com/bitnami"
-    values = yaml.safe_load(source['helm']['values'])
-    assert values['ingress']['enabled']
-    assert values['ingress']['hostname'] == "add-app.test-org.users.example.com" # noqa
-    assert values['ingress']['annotations']['cert-manager.io/cluster-issuer']
-    extra_hosts = [x['name'] for x in values['ingress']['extraHosts']]
-    assert "example.example.com" in extra_hosts
-    assert "www2.example.ru" in extra_hosts
-    assert values['service']['type'] == "ClusterIP"
-    git_val = values['cloneStaticSiteFromGit']
-    assert git_val['enabled']
-    assert git_val['repository'] == 'https://github.com/example/example.git'
-    assert git_val['branch'] == 'devel'
+
+    component = app.dao.get_component(
+        org="test-org",
+        app="app1",
+        component="add-app2")
+    assert component['valuesInline'] == {
+        '_type': 'nginx',
+        'ingress': {
+            'enabled': True,
+            'hostname': 'add-app2.test-org.users.example.com',
+            'annotations': {
+                'cert-manager.io/cluster-issuer': 'acme-issuer',
+            },
+            'extraHosts': [
+                {
+                    'name': 'example.example.com',
+                    'path': '/',
+                },
+                {
+                    'name': 'www2.example.ru',
+                    'path': '/',
+                },
+            ],
+            'tls': True,
+            'certManager': True,
+        },
+        'service': {
+            'type': 'ClusterIP',
+        },
+        'cloneStaticSiteFromGit': {
+            'enabled': True,
+            'repository': 'https://github.com/example/example.git',
+            'branch': 'devel',
+        },
+    }
 
 
-def test_nginx_add_static_page_default_branch(client):
+def test_nginx_add_static_page_default_branch(client, app):
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
+              'app_name': 'app1',
               'name': 'add-app',
               'git': {'repo': 'https://github.com/example/example.git'},
               'fqdns': ['example.example.com']},
         headers={'X-User-Full': USER})
     assert response.status_code == 201
-    with open("workdir/test-org/apps/add-app.yml", "r") as file:
-        application = yaml.safe_load(file)
-    source = application['spec']['source']
-    values = yaml.safe_load(source['helm']['values'])
-    git_val = values['cloneStaticSiteFromGit']
-    assert git_val['enabled']
-    assert git_val['repository'] == 'https://github.com/example/example.git'
-    assert git_val['branch'] == 'master'
+
+    component = app.dao.get_component(
+        org="test-org",
+        app="app1",
+        component="add-app")
+    assert component['valuesInline'] == {
+        '_type': 'nginx',
+        'ingress': {
+            'enabled': True,
+            'hostname': 'add-app.test-org.users.example.com',
+            'annotations': {
+                'cert-manager.io/cluster-issuer': 'acme-issuer',
+            },
+            'extraHosts': [
+                {
+                    'name': 'example.example.com',
+                    'path': '/',
+                },
+            ],
+            'tls': True,
+            'certManager': True,
+        },
+        'service': {
+            'type': 'ClusterIP',
+        },
+        'cloneStaticSiteFromGit': {
+            'enabled': True,
+            'repository': 'https://github.com/example/example.git',
+            'branch': 'master',
+        },
+    }
 
 
-def test_nginx_add_static_page_missing_repo(client):
+def test_nginx_add_static_page_missing_repo(client, app):
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
+              'app_name': 'app1',
               'name': 'add-app',
               'git': {'branch': 'devel'},
               'fqdns': ['example.example.com']},
@@ -104,12 +154,14 @@ def test_nginx_add_duplicate(client):
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
+              'app_name': 'app1',
               'name': 'add-app'},
         headers={'X-User-Full': USER})
     assert response.status_code == 201
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
+              'app_name': 'app1',
               'name': 'add-app'},
         headers={'X-User-Full': USER})
     assert response.status_code == 409
@@ -122,49 +174,79 @@ def test_nginx_add_missing_name(client):
     assert response.status_code == 400
 
 
+def test_nginx_add_missing_app_name(client):
+    response = client.post(
+        '/nginx/',
+        json={'org': 'test-org',
+              'app_name': 'app1',
+              'name': 'add-app'},
+        headers={'X-User-Full': USER})
+    assert response.status_code == 201
+
+
 def test_nginx_add_not_logged(client):
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
+              'app_name': 'app1',
               'name': 'test-app'})
     assert response.status_code == 401
 
 
-def test_nginx_list(client):
+def test_nginx_list(client, app):
+    response = client.post(
+        '/nginx/',
+        json={'org': 'test-org',
+              'app_name': 'app1',
+              'name': 'add-app2',
+              'git': {'repo': 'https://github.com/example/example.git',
+                      'branch': 'devel'},
+              'fqdns': ['example.example.com', 'www2.example.ru']},
+        headers={'X-User-Full': USER})
+    assert response.status_code == 201
+    response = client.post(
+        '/nginx/',
+        json={'org': 'test-org',
+              'app_name': 'app1',
+              'name': 'add-app1'},
+        headers={'X-User-Full': USER})
+    assert response.status_code == 201
+
     response = client.get(
-        '/nginx/?org=test-org',
+        '/nginx/?org=test-org&app_name=app1',
         headers={'X-User-Full': USER})
     assert response.status_code == 200
     assert 'nginx' in response.json
-    assert len(response.json['nginx']) == 3
+    assert len(response.json['nginx']) == 2
     apps = sorted(response.json['nginx'], key=lambda x: x['name'])
-    assert apps[0]['name'] == "another-app"
-    assert apps[1]['name'] == "new-app"
-    assert 'git' not in apps[1]
-    assert apps[2]['name'] == "test-app"
-    assert apps[2]['git']['repo'] == "https://github.com/example/example.git"
-    assert apps[2]['git']['branch'] == "master"
-    assert "www.example.com" in apps[2]['fqdns']
-    assert "test-app.test-org.users.example.com" in apps[2]['fqdns']
+    print(apps)
+    assert apps[0]['name'] == "add-app1"
+    assert apps[1]['name'] == "add-app2"
+    assert 'git' not in apps[0]
+    assert apps[1]['git']['repo'] == "https://github.com/example/example.git"
+    assert apps[1]['git']['branch'] == "devel"
+    assert "www2.example.ru" in apps[1]['fqdns']
+    assert "example.example.com" in apps[1]['fqdns']
+    assert "add-app2.test-org.users.example.com" in apps[1]['fqdns']
 
+
+def test_nginx_list_empty_app_name(client):
     response = client.get(
-        '/nginx/?org=test-org',
+        '/nginx/?org=test-org&app_name=app_not_exist',
         headers={'X-User-Full': USER})
-    assert response.status_code == 200
-
-
-def test_nginx_list_empty_org(client):
-    response = client.get(
-        '/nginx/?org=test-user',
-        headers={'X-User-Full': USER})
-    assert response.status_code == 200
-    assert 'nginx' in response.json
-    assert len(response.json['nginx']) == 0
+    assert response.status_code == 404
 
 
 def test_nginx_list_no_org(client):
     response = client.get(
         '/nginx/',
+        headers={'X-User-Full': USER})
+    assert response.status_code == 400
+
+
+def test_nginx_list_no_app(client):
+    response = client.get(
+        '/nginx/?org=test-org',
         headers={'X-User-Full': USER})
     assert response.status_code == 400
 
@@ -179,6 +261,7 @@ def test_nginx_add_wrong_org(client):
     response = client.post(
         '/nginx/',
         json={'org': 'another-org',
+              'app_name': 'app1',
               'name': 'add-app'},
         headers={'X-User-Full': USER})
     assert response.status_code == 403
@@ -189,45 +272,3 @@ def test_nginx_list_wrong_org(client):
         '/nginx/?org=another-org',
         headers={'X-User-Full': USER})
     assert response.status_code == 403
-
-
-def test_nginx_list_with_prefix(client_with_subpath):
-    response = client_with_subpath.get(
-        '/nginx/?org=test-org',
-        headers={'X-User-Full': USER})
-    assert response.status_code == 200
-    assert 'nginx' in response.json
-    assert len(response.json['nginx']) == 1
-    apps = sorted(response.json['nginx'], key=lambda x: x['name'])
-    assert apps[0]['name'] == "new-app2"
-    assert 'git' not in apps[0]
-
-
-def test_nginx_add_with_prefix(client_with_subpath):
-    response = client_with_subpath.post(
-        '/nginx/',
-        json={'org': 'test-org',
-              'name': 'add-app3'},
-        headers={'X-User-Full': USER})
-    assert response.status_code == 201
-    with open("workdir/tenants/test-org/apps/add-app3.yml", "r") as file:
-        application = yaml.safe_load(file)
-    assert application['kind'] == "Application"
-    assert application['metadata']['name'] == "add-app3"
-    assert application['metadata']['namespace'] == "argocd"
-    assert application['spec']['destination']['namespace'] == "tenant-test-org"
-    assert application['spec']['project'] == "tenant-test-org"
-    source = application['spec']['source']
-    assert source['chart'] == "nginx"
-    assert source['targetRevision'] == "10.0.1"
-    assert source['helm']
-    assert source['repoURL'] == "https://charts.bitnami.com/bitnami"
-
-    with open("workdir/tenants/test-org/project.yml", "r") as file:
-        project = yaml.safe_load(file)
-    assert project['kind'] == "AppProject"
-    assert project['metadata']['name'] == "tenant-test-org"
-    assert project['metadata']['namespace'] == "argocd"
-    assert project['spec']['destinations'] == [{'namespace': 'tenant-test-org',
-                                                'server': '*'
-                                                }]
