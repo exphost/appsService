@@ -108,7 +108,7 @@ deploy branch:
     helm upgrade -n $KUBE_NAMESPACE -i test-controller exphost/exphost-controller -f gitlab-ci-values.yml
     --version v0.0.0-latest
     --set global.domain=${KUBE_NAMESPACE}.ci.exphost.pl
-    --wait --wait-for-jobs
+    --wait --wait-for-jobs --skip-crds
   - >
     helm upgrade -n $KUBE_NAMESPACE -i test-appsservice chart -f gitlab-ci-values-appsservice.yml
     --set podAnnotations."app\.gitlab\.com/app"=$CI_PROJECT_PATH_SLUG
