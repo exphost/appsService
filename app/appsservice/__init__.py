@@ -1,6 +1,7 @@
 from flask import Flask
 import os
 from . import nginx
+from . import app as app_blueprint
 from . import dao
 
 
@@ -20,4 +21,5 @@ def create_app(test_config=None):
     app.dao = dao.AppsDao(app.config['GIT_REPO'], app.config['git_subpath'])
 
     app.register_blueprint(nginx.bp)
+    app.register_blueprint(app_blueprint.bp)
     return app
