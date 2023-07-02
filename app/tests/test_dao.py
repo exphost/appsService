@@ -66,6 +66,9 @@ def test_add_app(app):
             }
         }
     ])
+    namespace = app.dao.get_app_namespace(org="test-org", app="app4")
+    assert namespace == "tenant-test-org"
+
     components = app.dao.get_app(org="test-org", app="app4")
     assert len(components) == 1
     assert components[0]["name"] == "nginx"

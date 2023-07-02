@@ -69,14 +69,24 @@ class AppsDao(object):
             obj = yaml.safe_load(f.read())
         return obj.get("helmCharts", None)
 
+    def get_app_namespace(self, org, app):
+        if not self._is_app(org, app):
+            raise FileNotFoundError
+        self.git_update()
+        obj = None
+        with open(self._app_path(org, app)) as f:
+            obj = yaml.safe_load(f.read())
+        return obj.get("namespace", None)
+
     def save_app(self, org, app, components):
         self.git_update(force=True)
         self.gitsem.acquire()
         if not os.path.exists(self._app_dir(org, app) + "/base"):
             os.makedirs(self._app_dir(org, app) + "/base", exist_ok=True)
         if not os.path.exists(self._app_path(org, app)):
+            namespace = "tenant-" + org
             with open(self._app_path(org, app), "w") as f:
-                f.write("---\nhelmCharts: []")
+                f.write(f"namespace: {namespace}")
         data = None
         with open(self._app_path(org, app)) as f:
             data = yaml.safe_load(f.read())
