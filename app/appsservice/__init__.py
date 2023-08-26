@@ -2,6 +2,7 @@ from flask import Flask
 import os
 from . import nginx
 from . import app as app_blueprint
+from . import instances
 from . import dao
 
 
@@ -22,4 +23,5 @@ def create_app(test_config=None):
 
     app.register_blueprint(nginx.bp)
     app.register_blueprint(app_blueprint.bp)
+    app.register_blueprint(instances.bp)
     return app

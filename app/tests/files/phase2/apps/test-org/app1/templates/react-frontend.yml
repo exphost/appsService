@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}-react-_-frontend
+  namespace: argocd
+  annotations:
+    exphost.pl/type: react
+spec:
+  project: tenant-test-org
+  source:
+    repoURL: 'https://gitlab.exphost.pl/charts'
+    targetRevision: v0.0.0-3-ge9ad446
+    chart: generic-app
+    helm:
+      values: |
+        image:
+          repository: registry.gitlab.exphost.pl/onelink/onelink-frontend
+          tag: v0.0.0-5-g2b2479d
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: tenant-test-org-app1
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

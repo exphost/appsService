@@ -1,0 +1,4 @@
+apiVersion: v2
+name: aa
+type: application
+versoin: 0.0.0-live

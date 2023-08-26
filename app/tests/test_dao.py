@@ -1,4 +1,6 @@
 import pytest
+import yaml
+import os
 
 
 def test_list_apps(app):
@@ -13,40 +15,37 @@ def test_list_apps_empty_org(app):
 
 
 def test_get_app(app):
-    components = app.dao.get_app(org="test-org", app="app1")
-    assert len(components) == 2
-    assert components[0]["name"] == "generic-app"
-    assert components[0]["repo"] == "https://gitlab.exphost.pl/charts"
-    assert components[0]["version"] == "v0.0.0-3-ge9ad446"
-    assert components[0]["releaseName"] == "frontend"
-    inline = components[0]["valuesInline"]
-    assert inline["image"]["repository"] == "registry.gitlab.exphost.pl/onelink/onelink-frontend" # noqa
-    assert inline["image"]["tag"] == "v0.0.1"
-    assert inline["_type"] == "react"
-    assert components[1]["name"] == "generic-app"
-    assert components[1]["repo"] == "https://gitlab.exphost.pl/charts"
-    assert components[1]["version"] == "v0.0.0-3-ge9ad446"
-    assert components[1]["releaseName"] == "app2"
-    assert components[1]["valuesInline"]["_type"] == "asd"
-
-
-def test_get_app_with_updates(app):
-
-    components = app.dao.get_app(org="test-org", app="app1")
-    assert len(components) == 2
-    assert components[0]["name"] == "generic-app"
-    assert components[0]["repo"] == "https://gitlab.exphost.pl/charts"
-    assert components[0]["version"] == "v0.0.0-3-ge9ad446"
-    assert components[0]["releaseName"] == "frontend"
-    inline = components[0]["valuesInline"]
-    assert inline["image"]["repository"] == "registry.gitlab.exphost.pl/onelink/onelink-frontend" # noqa
-    assert inline["image"]["tag"] == "v0.0.1"
-    assert inline["_type"] == "react"
-    assert components[1]["name"] == "generic-app"
-    assert components[1]["repo"] == "https://gitlab.exphost.pl/charts"
-    assert components[1]["version"] == "v0.0.0-3-ge9ad446"
-    assert components[1]["releaseName"] == "app2"
-    assert components[1]["valuesInline"]["_type"] == "asd"
+    get_app = app.dao.get_app(org="test-org", app="app1")
+    expected = {
+        'name': 'app1',
+        'components': [{
+            'chart': 'generic-app',
+            'repo': 'https://gitlab.exphost.pl/charts',
+            'version': 'v0.0.0-3-ge9ad446',
+            'name': 'app2',  # noqa E501
+            'type': 'asd',
+            'values': {
+                'image': {
+                    'repository': 'registry.gitlab.exphost.pl/onelink/onelink-frontend',  # noqa E501
+                    'tag': 'v0.0.0-5-g2b2479d',
+                }
+            }
+        }, {
+            'chart': 'generic-app',
+            'repo': 'https://gitlab.exphost.pl/charts',
+            'version': 'v0.0.0-3-ge9ad446',
+            'name': 'frontend',  # noqa E501
+            'type': 'react',
+            'values': {
+                'image': {
+                    'repository': 'registry.gitlab.exphost.pl/onelink/onelink-frontend',  # noqa E501
+                    'tag': 'v0.0.0-5-g2b2479d',
+                }
+            }
+        },
+        ]
+    }
+    assert expected.items() <= get_app.items()
 
 
 def test_app_not_found(app):
@@ -54,150 +53,114 @@ def test_app_not_found(app):
         app.dao.get_app(org="test-org", app="app4")
 
 
-def test_add_app(app):
-    app.dao.save_app(org="test-org", app="app4", components=[
-        {
-            "name": "nginx",
-            "releaseName": "frontend",
+def test_add_component(app):
+    app.dao.create_app(org="test-org", app="app4")
+    app.dao.save_component(org="test-org", app="app4", component={
+        "chart": "nginx",
+        "name": "frontend",
+        "repo": "repo4",
+        "version": "1.1.0",
+        "type": "nginx",
+        "values": {
+        }
+    })
+    get_app = app.dao.get_app(org="test-org", app="app4")
+    expected = {
+        'components': [{
+            "chart": "nginx",
             "repo": "repo4",
             "version": "1.1.0",
-            "valuesInline": {
-                "_type": "nginx"
-            }
-        }
-    ])
-    namespace = app.dao.get_app_namespace(org="test-org", app="app4")
-    assert namespace == "tenant-test-org"
-
-    components = app.dao.get_app(org="test-org", app="app4")
-    assert len(components) == 1
-    assert components[0]["name"] == "nginx"
-    assert components[0]["repo"] == "repo4"
-    assert components[0]["version"] == "1.1.0"
-    assert components[0]["releaseName"] == "frontend"
-    assert components[0]["valuesInline"]["_type"] == "nginx"
+            "name": 'frontend',
+            "type": "nginx",
+            "values": {}
+        }]
+    }
+    assert expected.items() <= get_app.items()
 
 
 def test_update_app(app):
-    app.dao.save_app(org="test-org3", app="app1", components=[
-        {
-            "name": "nginx",
-            "releaseName": "frontend",
-            "repo": "repo4",
-            "version": "1.1.0",
-            "valuesInline": {
-                "_type": "nginx"
-            }
-        },
-        {
-            "name": "flask",
-            "releaseName": "backend",
-            "repo": "repo42",
-            "version": "2.1.0",
-            "valuesInline": {
-                "_type": "flask"
-            }
-        }
-    ])
-    app.dao.save_app(org="test-org3", app="app1", components=[
-        {
-            "name": "nginx",
-            "releaseName": "frontend",
+    app.dao.create_app(org="test-org", app="app3")
+    app.dao.save_component(org="test-org", app="app3", component={
+        "chart": "nginx",
+        "name": "frontend",
+        "repo": "repo4",
+        "version": "1.1.0",
+        "type": "nginx",
+        "values": {}
+    })
+    app.dao.save_component(
+        org="test-org",
+        app="app3",
+        component={
+            "chart": "nginx",
+            "name": "frontend",
             "repo": "repo5",
             "version": "1.2.0",
-            "valuesInline": {
-                "_type": "nginx"
-            }
-        }
-    ])
-    components = app.dao.get_app(org="test-org3", app="app1")
-    assert len(components) == 1
-    assert components[0]["name"] == "nginx"
-    assert components[0]["repo"] == "repo5"
-    assert components[0]["version"] == "1.2.0"
-    assert components[0]["releaseName"] == "frontend"
-    assert components[0]["valuesInline"]["_type"] == "nginx"
-
-
-def test_add_component(app):
-    app.dao.save_app(org="test-org3", app="app1", components=[
-        {
-            "name": "nginx",
-            "releaseName": "frontend",
-            "repo": "repo4",
-            "version": "1.1.0",
-            "valuesInline": {
-                "_type": "nginx"
-            }
-        },
-        {
-            "name": "flask",
-            "releaseName": "backend",
-            "repo": "repo42",
-            "version": "2.1.0",
-            "valuesInline": {
-                "_type": "flask"
-            }
-        }
-    ])
-    app.dao.update_component(org="test-org3", app="app1", component={
-        "name": "nginx",
-        "releaseName": "frontend",
-        "repo": "repo5",
-        "version": "1.2.0",
-        "valuesInline": {
-            "_type": "nginx"
-        }
-    })
-    components = app.dao.get_app(org="test-org3", app="app1")
-    assert len(components) == 2
-    assert components[0]["name"] == "nginx"
-    assert components[0]["repo"] == "repo5"
-    assert components[0]["version"] == "1.2.0"
-    assert components[0]["releaseName"] == "frontend"
-    assert components[0]["valuesInline"]["_type"] == "nginx"
-    assert components[1]["name"] == "flask"
-    assert components[1]["repo"] == "repo42"
-    assert components[1]["version"] == "2.1.0"
-    assert components[1]["releaseName"] == "backend"
+            "type": "nginx",
+            "values": {}
+        })
+    get_app = app.dao.get_app(org="test-org", app="app3")
+    expected = {
+        "components": [{
+            "name": 'frontend',  # noqa E501
+            "chart": "nginx",
+            "repo": "repo5",
+            "version": "1.2.0",
+            "type": "nginx",
+            "values": {},
+        }]
+    }
+    assert expected.items() <= get_app.items()
 
 
 def test_delete_component(app):
-    app.dao.save_app(org="test-org3", app="app1", components=[
-        {
-            "name": "nginx",
-            "releaseName": "frontend",
-            "repo": "repo4",
+    app.dao.delete_component(
+        org="test-org",
+        app="app1",
+        component={"type": "react", "name": "frontend"})
+    get_app = app.dao.get_app(org="test-org", app="app1")
+    expected = {
+        "components": [{
+            'chart': 'generic-app',
+            'repo': 'https://gitlab.exphost.pl/charts',
+            'version': 'v0.0.0-3-ge9ad446',
+            'name': 'app2',  # noqa E501
+            'type': 'asd',
+            'values': {
+                'image': {
+                    'repository': 'registry.gitlab.exphost.pl/onelink/onelink-frontend',  # noqa E501
+                    'tag': 'v0.0.0-5-g2b2479d',
+                }
+            }
+        }]
+    }
+    assert expected.items() <= get_app.items()
+
+
+def test_update_component(app):
+    app.dao.save_component(
+        org="test-org",
+        app="app1",
+        component={
+            "type": "react",
+            "name": "frontend",
             "version": "1.1.0",
-            "valuesInline": {
-                "_type": "nginx"
-            }
-        },
-        {
-            "name": "flask",
-            "releaseName": "backend",
-            "repo": "repo42",
-            "version": "2.1.0",
-            "valuesInline": {
-                "_type": "flask"
-            }
-        }
-    ])
-    app.dao.delete_component(org="test-org3", app="app1", component="backend")
-    components = app.dao.get_app(org="test-org3", app="app1")
-    assert len(components) == 1
-    assert components[0]["name"] == "nginx"
-    assert components[0]["repo"] == "repo4"
-    assert components[0]["version"] == "1.1.0"
-    assert components[0]["releaseName"] == "frontend"
-    assert components[0]["valuesInline"]["_type"] == "nginx"
+            "values": {
+                "repository": "registry.gitlab.exphost.pl/onelink/onelink-frontend",  # noqa E501
+                "tag": "1.2.0",
+            },
+        })
+    components = app.dao.get_app(org="test-org", app="app1")['components']
+    assert len(components) == 2
+    assert components[1]["version"] == "1.1.0"
+    assert components[1]["type"] == "react"
 
 
-def test_update_component_non_existing_app(app):
+def test_save_component_non_existing_app(app):
     with pytest.raises(FileNotFoundError):
-        app.dao.update_component(org="test-org3", app="app5", component={
-            "name": "nginx",
-            "releaseName": "frontend",
+        app.dao.save_component(org="test-org3", app="app5", component={
+            "type": "nginx",
+            "name": "frontend",
         })
 
 
@@ -206,19 +169,111 @@ def test_delete_component_non_existing_app(app):
         app.dao.delete_component(
             org="test-org3",
             app="app5",
-            component="backend")
+            component={"type": "react", "name": "frontend"})
+
+
+def test_delete_component_non_existing_component(app):
+    app.dao.delete_component(
+        org="test-org",
+        app="app1",
+        component={"type": "pelican", "name": "frontend"})
 
 
 def test_get_component(app):
     component = app.dao.get_component(
         org="test-org",
         app="app1",
-        component="app2")
-    assert component["releaseName"] == "app2"
+        component={
+            "name": "app2",
+            "type": "asd"
+            })
+    assert component["name"] == 'app2'
     assert component["repo"] == "https://gitlab.exphost.pl/charts"
     assert component["version"] == "v0.0.0-3-ge9ad446"
 
 
-def test_get_component_non_existing(app):
+def test_get_component_non_existing_component(app):
     with pytest.raises(FileNotFoundError):
-        app.dao.get_component(org="test-org", app="app1", component="app3")
+        app.dao.get_component(
+            org="test-org",
+            app="app1",
+            component={
+                "type": "pelican",
+                "name": "frontend"
+            })
+
+
+def test_get_component_non_existing_app(app):
+    with pytest.raises(FileNotFoundError):
+        app.dao.get_component(
+            org="test-org",
+            app="app5",
+            component={
+                "type": "pelican",
+                "name": "frontend"
+            })
+
+
+def test_create_app(app):
+    apppath = app.dao._app_dir(org="test-org", app="app5")
+    app.dao.create_app(org="test-org", app="app5")
+
+    assert os.path.exists(apppath)
+    assert os.path.exists(os.path.join(apppath, "Chart.yaml"))
+
+    chart = yaml.safe_load(open(os.path.join(apppath, "Chart.yaml")).read())
+    assert chart["apiVersion"] == "v2"
+    assert chart["name"] == "app5"
+    assert chart["type"] == "application"
+
+
+def test_yaml_syntax(app):
+    app.dao.save_component(org="test-org", app="app1", component={
+        "name": "nginx1",
+        "type": "nginx",
+        "chart": "nginx",
+        "repo": "https://charts.gitlab.io/",
+        "version": "1.2.3",
+        "values": {
+            "key1": "value1",
+            "key2": "value2",
+        }
+    })
+    apppath = app.dao._app_dir(org="test-org", app="app1")
+    assert os.path.exists(apppath)
+    component_path = os.path.join(apppath, "templates", "nginx-nginx1.yml")
+    assert os.path.exists(component_path)
+    manifest = yaml.load(
+        open(component_path).read().replace('{{', '__'),
+        Loader=yaml.UnsafeLoader)
+    expected = yaml.safe_load("""
+kind: Application
+apiVersion: argoproj.io/v1alpha1
+metadata:
+    name: __ printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}-nginx-_-nginx1
+    namespace: argocd
+    annotations:
+        exphost.pl/type: nginx
+spec:
+  project: tenant-test-org
+  source:
+    repoURL: https://charts.gitlab.io/
+    chart: nginx
+    targetRevision: 1.2.3
+    helm:
+      values: |
+        key1: value1
+        key2: value2
+  destination:
+    namespace: tenant-test-org-app1
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+""")  # noqa E501
+    assert expected == manifest
+
+# test_create_app_already_exists

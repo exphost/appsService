@@ -3,7 +3,14 @@ from flask_restx import Api, Resource, fields
 from .helpers import auth_required, has_access_to_org
 
 bp = Blueprint('app', __name__, url_prefix='/app')
-api = Api(bp, doc='/')
+authorizations = {
+    'apikey': {
+        'type': 'apiKey',
+        'in': 'header',
+        'name': 'X-User-Full'
+    }
+}
+api = Api(bp, doc='/docs', authorizations=authorizations, security='apikey')
 
 app_model = api.model(
     'App',
@@ -13,7 +20,7 @@ app_model = api.model(
     })
 
 app_model_list = api.model(
-    'App',
+    'AppQuery',
     {
         'org': fields.String(required=True),
     })
@@ -35,7 +42,7 @@ class App(Resource):
         except FileNotFoundError:
             pass
 
-        self.dao.save_app(request.json['org'], request.json['name'], [])
+        self.dao.create_app(request.json['org'], request.json['name'])
         return {'status': 'created'}, 201
 
     @auth_required

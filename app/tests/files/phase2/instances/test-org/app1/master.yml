@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-org-app1-master
+  namespace: argocd
+  labels:
+    org: test-org
+    app: app1
+spec:
+  destination:
+    namespace: test-org-app1-master
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: apps/test-org/app1
+    repoURL: git@gitlab.exphost.pl:exphost-controller/test_tenants_repo.git
+    targetRevision: HEAD
+    helm:
+      values: ""
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
