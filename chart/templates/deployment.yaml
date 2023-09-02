@@ -13,6 +13,7 @@ spec:
   selector:
     matchLabels:
       {{- include "chart.selectorLabels" . | nindent 6 }}
+      component: appsservice
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -21,28 +22,27 @@ spec:
       {{- end }}
       labels:
         {{- include "chart.selectorLabels" . | nindent 8 }}
+        component: appsservice
     spec:
+      initContainers:
+        - name: git-waiter
+          image: alpine
+          command: ["/bin/sh"]
+          args: ["-c", "echo 'waiting for /app/workdir/.git to appear'; until [ -d /app/workdir/.git ]; do echo -n '.'; sleep 1; done"]
+          volumeMounts:
+            - name: git
+              mountPath: "/app/workdir"
       containers:
         - name: appsservice
           image: "{{ .Values.image.name }}:{{ .Values.image.tag | default .Chart.AppVersion}}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: GIT_REPO
-              value: {{ .Values.git_repo.url }}
-{{- if .Values.git_repo.subpath }}
-            - name: GIT_SUBPATH
-              value: {{ .Values.git_repo.subpath }}
-{{- end }}
             - name: USERS_DOMAIN
               value: {{ .Values.users_domain }}
           ports:
             - name: http
               containerPort: 5000
               protocol: TCP
-          volumeMounts:
-            - name: sshkey
-              mountPath: "/app/sshkey"
-              readOnly: true
           #livenessProbe:
           #  httpGet:
           #    path: /
@@ -51,19 +51,10 @@ spec:
           #  httpGet:
           #    path: /
           #    port: http
-
+          volumeMounts:
+            - name: git
+              mountPath: /app/workdir
       volumes:
-      - name: sshkey
-        secret:
-{{- if .Values.git_repo.sshkey.secret.name }}
-          secretName: {{ .Values.git_repo.sshkey.secret.name }}
-          items:
-            - key: {{ .Values.git_repo.sshkey.secret.key }}
-              path: id_rsa
-{{- else }}
-          secretName: {{ include "chart.fullname" . }}-sshkey
-          items:
-            - key: ssh-privatekey
-              path: id_rsa
-{{- end }}
-          defaultMode: 0400
+        - name: git
+          persistentVolumeClaim:
+            claimName: {{ include "chart.fullname" . }}-git

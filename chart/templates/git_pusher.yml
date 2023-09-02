@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chart.fullname" . }}-git-pusher
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+  {{- with .Values.podAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "chart.selectorLabels" . | nindent 6 }}
+      component: git-pusher
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "chart.selectorLabels" . | nindent 8 }}
+        component: git-pusher
+    spec:
+      initContainers:
+      - name: git-clone-update
+        image: alpine
+        command: ["/bin/sh"]
+        # git pull or git clone
+        args: ["-cx", "apk add git openssh-client && pwd && ls && ls -l ~/.ssh && if [ -d .git ]; then echo 'pulling...'; git pull; else echo clonning $GIT_REPO...; rm -rf lost+found;  git clone \"$GIT_REPO\" .; fi"]
+        workingDir: /app/workdir
+        env:
+          - name: GIT_REPO
+            value: {{ .Values.git_repo.url }}
+          - name: GIT_SSH_COMMAND
+            value: "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+        volumeMounts:
+          - name: git
+            mountPath: "/app/workdir"
+          - name: sshkey
+            mountPath: "/root/.ssh"
+      containers:
+        - name: git-pusher
+          image: alpine
+          command: ["/bin/sh"]
+          # git add && git commit if there are changes && git push
+          args: ["-cx", "apk add git openssh-client && git config --global user.email \"git-pusher@exphost.pl\" && git config --global user.name \"git-pusher\" && while true; do git add . && git commit -m 'update' && git push; sleep 60; done"]
+          workingDir: /app/workdir
+          env:
+            - name: GIT_REPO
+              value: {{ .Values.git_repo.url }}
+            - name: GIT_SSH_COMMAND
+              value: "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+          volumeMounts:
+            - name: sshkey
+              mountPath: "/root/.ssh"
+              readOnly: true
+            - name: git
+              mountPath: "/app/workdir"
+      volumes:
+      - name: git
+        persistentVolumeClaim:
+          claimName: {{ include "chart.fullname" . }}-git
+      - name: sshkey
+        secret:
+{{- if .Values.git_repo.sshkey.secret.name }}
+          secretName: {{ .Values.git_repo.sshkey.secret.name }}
+          items:
+            - key: {{ .Values.git_repo.sshkey.secret.key }}
+              path: id_rsa
+{{- else }}
+          secretName: {{ include "chart.fullname" . }}-sshkey
+          items:
+            - key: ssh-privatekey
+              path: id_rsa
+{{- end }}
+          defaultMode: 0400

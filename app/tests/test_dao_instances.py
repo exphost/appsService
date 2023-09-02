@@ -53,7 +53,7 @@ def test_create_instance_manifest_content(app):
         }
     }
     app.dao.create_instance("test-org", "app1", "instance1", instance)
-    with open(os.path.join(app.dao.gitdir, "instances", "test-org", "app1", "instance1.yml"), "r") as f:  # noqa E501
+    with open(os.path.join(app.dao.workdir, "instances", "test-org", "app1", "instance1.yml"), "r") as f:  # noqa E501
         content = yaml.safe_load(f)
     expected = yaml.safe_load("""apiVersion: argoproj.io/v1alpha1
 kind: Application
