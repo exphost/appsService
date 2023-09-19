@@ -39,6 +39,8 @@ spec:
           env:
             - name: USERS_DOMAIN
               value: {{ .Values.users_domain }}
+            - name: AUTHSERVICE_ENDPOINT
+              value: {{ .Values.authservice_endpoint }}
           ports:
             - name: http
               containerPort: 5000

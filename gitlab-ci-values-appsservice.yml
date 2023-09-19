@@ -1,5 +1,6 @@
 image:
   tag: dev
+authservice_endpoint: "https://__DOMAIN__"
 git_repo:
   url: git@gitlab.exphost.pl:exphost-controller/test_tenants_repo.git
   sshkey:

@@ -14,10 +14,7 @@ def test_create_instance(client, app):
                 }
             }
         },
-        headers={
-            "X-User-Full": USER
-        }
-    )
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
     instances = app.dao.get_instance("test-org", "test-app", "newinstance")
     expected = {
@@ -41,10 +38,7 @@ def test_create_instance_already_exists(client):
                 }
             }
         },
-        headers={
-            "X-User-Full": USER
-        }
-    )
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
     response = client.post(
         "/instances/",
@@ -58,20 +52,14 @@ def test_create_instance_already_exists(client):
                 }
             }
         },
-        headers={
-            "X-User-Full": USER
-        }
-    )
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 409
 
 
 def test_get_instances(client):
     response = client.get(
         "/instances/?org=test-org&app=app1",
-        headers={
-            "X-User-Full": USER
-        }
-    )
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 200
     assert response.json == {
         "master": {

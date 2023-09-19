@@ -1,20 +1,19 @@
-from flask import request
-import json
-import base64
-
-
-def auth_required(fn):
-    def wrapper(*args, **kwargs):
-        if not request.headers.get('X-User-Full', None):
-            return {'error': 'Not authenticated'}, 401
-        return fn(*args, **kwargs)
-    return wrapper
+from flask import request, current_app
+import requests
 
 
 def has_access_to_org(fn):
     def wrapper(*args, **kwargs):
-        groups = request.headers.get('X-User-Full')
-        groups = json.loads(base64.b64decode(groups))['groups']
+        if not request.headers.get('Authorization', None):
+            return {'error': 'Not authenticated'}, 401
+        claims_response = requests.post(
+            current_app.config['AUTHSERVICE_ENDPOINT'] + '/api/auth/v1/token/validate',  # noqa E501
+            headers={'Authorization': request.headers['Authorization']}
+        )
+        if claims_response.status_code != 200:
+            return {'error': 'Not authenticated'}, 401
+        groups = claims_response.json()['claims']['groups']
+
         if request.method == "POST":
             org = request.json['org']
         elif request.method == "GET":

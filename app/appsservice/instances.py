@@ -1,6 +1,6 @@
 from flask import Blueprint, request, current_app
 from flask_restx import Api, Resource, fields
-from .helpers import auth_required, has_access_to_org
+from .helpers import has_access_to_org
 
 bp = Blueprint("instances", __name__, url_prefix="/instances")
 authorizations = {
@@ -23,7 +23,6 @@ instance_model = api.model('Instance', {
 @api.route("/", endpoint="instances")
 class Instances(Resource):
     @api.expect(instance_model, validate=True)
-    @auth_required
     @has_access_to_org
     def post(self):
         dao = current_app.dao
@@ -37,7 +36,6 @@ class Instances(Resource):
         dao.create_instance(json["org"], json["app"], name, json["config"])
         return "Instance created", 201
 
-    @auth_required
     @has_access_to_org
     def get(self):
         dao = current_app.dao

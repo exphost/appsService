@@ -7,7 +7,7 @@ def test_nginx_add(client, app):
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add'},
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
 
     component = app.dao.get_component(
@@ -47,7 +47,7 @@ def test_nginx_add_non_existing_app(client, app):
         json={'org': 'test-org',
               'app': 'app10',
               'name': 'add-app1'},
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 404
 
 
@@ -62,7 +62,7 @@ def test_nginx_add_static_page(client, app):
                         'branch': 'devel'},
                 'fqdns': ['example.example.com', 'www2.example.ru']},
               },
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
 
     component = app.dao.get_component(
@@ -115,7 +115,7 @@ def test_nginx_add_static_page_default_branch(client, app):
                 'git': {'repo': 'https://github.com/example/example.git'},
                 'fqdns': ['example.example.com', 'www2.example.ru']
               }},
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
 
     component = app.dao.get_component(
@@ -168,7 +168,7 @@ def test_nginx_add_static_page_missing_repo(client, app):
                 'git': {'branch': 'devel'},
                 'fqdns': ['example.example.com']
               }},
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 400
 
 
@@ -178,14 +178,14 @@ def test_nginx_add_duplicate(client):
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add-app'},
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add-app'},
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 409
 
 
@@ -202,7 +202,7 @@ def test_nginx_add_missing_component_name(client):
         '/nginx/',
         json={'org': 'test-org',
               'app': 'app1'},
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 400
 
 
@@ -226,19 +226,19 @@ def test_nginx_list(client, app):
                         'branch': 'devel'},
                 'fqdns': ['example.example.com', 'www2.example.ru']
                 }},
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
     response = client.post(
         '/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add-app1'},
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
 
     response = client.get(
         '/nginx/?org=test-org&app=app1',
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 200
     assert 'nginx' in response.json
     assert len(response.json['nginx']) == 2
@@ -257,21 +257,21 @@ def test_nginx_list(client, app):
 def test_nginx_list_empty_app_name(client):
     response = client.get(
         '/nginx/?org=test-org&app=app_not_exist',
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 404
 
 
 def test_nginx_list_no_org(client):
     response = client.get(
         '/nginx/',
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 400
 
 
 def test_nginx_list_no_app(client):
     response = client.get(
         '/nginx/?org=test-org',
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 400
 
 
@@ -287,12 +287,12 @@ def test_nginx_add_wrong_org(client):
         json={'org': 'another-org',
               'app': 'app1',
               'name': 'add-app'},
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 403
 
 
 def test_nginx_list_wrong_org(client):
     response = client.get(
         '/nginx/?org=another-org&app=app1',
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 403

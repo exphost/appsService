@@ -8,7 +8,7 @@ def test_create_app(client, app):
             'org': 'test-org',
             'name': 'test-app',
         },
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert resposne.status_code == 201
     # not exception means app exists
     app.dao.get_app(org='test-org', app='test-app')
@@ -17,7 +17,7 @@ def test_create_app(client, app):
 def test_list_apps(client, app):
     response = client.get(
         "/app/?org=test-org",
-        headers={'X-User-Full': USER})
+        headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 200
     assert len(response.json) == 2
     assert response.json[0] == 'app1'

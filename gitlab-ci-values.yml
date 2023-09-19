@@ -17,6 +17,10 @@ gateway:
 appsservice:
   enabled: false
 
+authservice:
+  authEndpoint: "https://auth.__DOMAIN__/dex"
+  authAudience: "exphost-controller"
+
 landingpage:
   ingress:
     hostname: __DOMAIN__

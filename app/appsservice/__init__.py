@@ -11,9 +11,13 @@ def create_app(test_config=None):
     app.config.from_mapping(
         USERS_DOMAIN=os.environ.get("USERS_DOMAIN", ""),
         WORKDIR=os.environ.get("WORKDIR", "workdir"),
+        AUTHSERVICE_ENDPOINT=os.environ.get("AUTHSERVICE_ENDPOINT", ""),
     )
     if not app.config['USERS_DOMAIN']:
         app.logger.error("USERS_DOMAIN not provided")
+        return False
+    if not app.config['AUTHSERVICE_ENDPOINT']:
+        app.logger.error("AUTHSERVICE_ENDPOINT not provided")
         return False
     app.dao = dao.AppsDao(app.config['WORKDIR'])
 

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, current_app
 from flask_restx import Api, Resource, fields
-from .helpers import auth_required, has_access_to_org
+from .helpers import has_access_to_org
 
 bp = Blueprint('nginx', __name__, url_prefix='/nginx')
 authorizations = {
@@ -79,7 +79,6 @@ nginx_query_model = api.model(
 @api.route("/", endpoint="nginx")
 class Nginx(Resource):
     @api.expect(nginx_model, validate=True)
-    @auth_required
     @has_access_to_org
     def post(self):
         dao = current_app.dao
@@ -119,7 +118,6 @@ class Nginx(Resource):
         except FileNotFoundError:
             return {'error': 'app not found'}, 500
 
-    @auth_required
     @has_access_to_org
     def get(self):
         org = request.args.get('org', None)
