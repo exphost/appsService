@@ -40,7 +40,7 @@ spec:
             - name: USERS_DOMAIN
               value: {{ .Values.users_domain }}
             - name: AUTHSERVICE_ENDPOINT
-              value: {{ .Values.authservice_endpoint }}
+              value: "https://{{ .Values.global.domain }}"
           ports:
             - name: http
               containerPort: 5000
