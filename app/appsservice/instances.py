@@ -2,7 +2,7 @@ from flask import Blueprint, request, current_app
 from flask_restx import Api, Resource, fields
 from .helpers import has_access_to_org
 
-bp = Blueprint("instances", __name__, url_prefix="/instances")
+bp = Blueprint("instances", __name__, url_prefix="/api/apps/v1/instances")
 authorizations = {
     'apikey': {
         'type': 'apiKey',

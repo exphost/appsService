@@ -5,6 +5,8 @@ image:
 global:
   domain: example.com
 
+ingress: {}
+
 users_domain: users.example.com
 git_repo:
   url: "git@gitlab.exphost.pl:exphost-controller/test_tenants_repo.git"

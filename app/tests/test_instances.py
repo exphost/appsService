@@ -3,7 +3,7 @@ USER="eyJpc3MiOiAiaHR0cHM6Ly9hdXRoLmdhdGV3YXktMzktZGV2LXBhc3MtdXNlci0wNWxzamMuY2
 
 def test_create_instance(client, app):
     response = client.post(
-        "/instances/",
+        "/api/apps/v1/instances/",
         json={
             "org": "test-org",
             "app": "test-app",
@@ -27,7 +27,7 @@ def test_create_instance(client, app):
 
 def test_create_instance_already_exists(client):
     response = client.post(
-        "/instances/",
+        "api/apps/v1/instances/",
         json={
             "org": "test-org",
             "app": "app1",
@@ -41,7 +41,7 @@ def test_create_instance_already_exists(client):
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
     response = client.post(
-        "/instances/",
+        "/api/apps/v1/instances/",
         json={
             "org": "test-org",
             "app": "app1",
@@ -58,7 +58,7 @@ def test_create_instance_already_exists(client):
 
 def test_get_instances(client):
     response = client.get(
-        "/instances/?org=test-org&app=app1",
+        "/api/apps/v1/instances/?org=test-org&app=app1",
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 200
     assert response.json == {

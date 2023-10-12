@@ -3,7 +3,7 @@ USER="eyJpc3MiOiAiaHR0cHM6Ly9hdXRoLmdhdGV3YXktMzktZGV2LXBhc3MtdXNlci0wNWxzamMuY2
 
 def test_nginx_add(client, app):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add'},
@@ -43,7 +43,7 @@ def test_nginx_add(client, app):
 
 def test_nginx_add_non_existing_app(client, app):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app10',
               'name': 'add-app1'},
@@ -53,7 +53,7 @@ def test_nginx_add_non_existing_app(client, app):
 
 def test_nginx_add_static_page(client, app):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add2',
@@ -107,7 +107,7 @@ def test_nginx_add_static_page(client, app):
 
 def test_nginx_add_static_page_default_branch(client, app):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add2',
@@ -160,7 +160,7 @@ def test_nginx_add_static_page_default_branch(client, app):
 
 def test_nginx_add_static_page_missing_repo(client, app):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add-app',
@@ -174,14 +174,14 @@ def test_nginx_add_static_page_missing_repo(client, app):
 
 def test_nginx_add_duplicate(client):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add-app'},
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add-app'},
@@ -191,7 +191,7 @@ def test_nginx_add_duplicate(client):
 
 def test_nginx_add_missing_app_name(client):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'name': 'test-app'})
     assert response.status_code == 400
@@ -199,7 +199,7 @@ def test_nginx_add_missing_app_name(client):
 
 def test_nginx_add_missing_component_name(client):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app1'},
         headers={'Authorization': 'Bearer ' + USER})
@@ -208,7 +208,7 @@ def test_nginx_add_missing_component_name(client):
 
 def test_nginx_add_not_logged(client):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'test-app'})
@@ -217,7 +217,7 @@ def test_nginx_add_not_logged(client):
 
 def test_nginx_list(client, app):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add-app2',
@@ -229,7 +229,7 @@ def test_nginx_list(client, app):
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 201
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'test-org',
               'app': 'app1',
               'name': 'add-app1'},
@@ -237,7 +237,7 @@ def test_nginx_list(client, app):
     assert response.status_code == 201
 
     response = client.get(
-        '/nginx/?org=test-org&app=app1',
+        '/api/apps/v1/nginx/?org=test-org&app=app1',
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 200
     assert 'nginx' in response.json
@@ -256,34 +256,34 @@ def test_nginx_list(client, app):
 
 def test_nginx_list_empty_app_name(client):
     response = client.get(
-        '/nginx/?org=test-org&app=app_not_exist',
+        '/api/apps/v1/nginx/?org=test-org&app=app_not_exist',
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 404
 
 
 def test_nginx_list_no_org(client):
     response = client.get(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 400
 
 
 def test_nginx_list_no_app(client):
     response = client.get(
-        '/nginx/?org=test-org',
+        '/api/apps/v1/nginx/?org=test-org',
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 400
 
 
 def test_nginx_list_not_logged(client):
     response = client.get(
-        '/nginx/?org=test-org')
+        '/api/apps/v1/nginx/?org=test-org')
     assert response.status_code == 401
 
 
 def test_nginx_add_wrong_org(client):
     response = client.post(
-        '/nginx/',
+        '/api/apps/v1/nginx/',
         json={'org': 'another-org',
               'app': 'app1',
               'name': 'add-app'},
@@ -293,6 +293,6 @@ def test_nginx_add_wrong_org(client):
 
 def test_nginx_list_wrong_org(client):
     response = client.get(
-        '/nginx/?org=another-org&app=app1',
+        '/api/apps/v1/nginx/?org=another-org&app=app1',
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 403

@@ -3,7 +3,7 @@ USER="eyJpc3MiOiAiaHR0cHM6Ly9hdXRoLmdhdGV3YXktMzktZGV2LXBhc3MtdXNlci0wNWxzamMuY2
 
 def test_create_app(client, app):
     resposne = client.post(
-        "/app/",
+        "/api/apps/v1/app/",
         json={
             'org': 'test-org',
             'name': 'test-app',
@@ -16,7 +16,7 @@ def test_create_app(client, app):
 
 def test_list_apps(client, app):
     response = client.get(
-        "/app/?org=test-org",
+        "/api/apps/v1/app/?org=test-org",
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 200
     assert len(response.json) == 2
