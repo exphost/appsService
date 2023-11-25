@@ -250,7 +250,7 @@ def test_yaml_syntax(app):
 kind: Application
 apiVersion: argoproj.io/v1alpha1
 metadata:
-    name: __ printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}-nginx-_-nginx1
+    name: __ printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}-nginx---nginx1
     namespace: argocd
     annotations:
         exphost.pl/type: nginx

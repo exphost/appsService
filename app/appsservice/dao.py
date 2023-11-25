@@ -40,10 +40,10 @@ class AppsDao(object):
         return os.path.exists(self._app_path(org, app))
 
     def _component_name_to_manifest_name(self, app, org, component):
-        return f"{{{{ printf \"%s-%s\" .Release.Name .Chart.Name | trunc 63 | trimSuffix \"-\" }}}}-{component['type']}-_-{component['name']}"  # noqa: E501
+        return f"{{{{ printf \"%s-%s\" .Release.Name .Chart.Name | trunc 63 | trimSuffix \"-\" }}}}-{component['type']}---{component['name']}"  # noqa: E501
 
     def _manifest_name_to_component_name(self, manifest_name):
-        return manifest_name.split('-_-')[1]
+        return manifest_name.split('---')[1]
 
     def _component_to_dict(self, component):
         component_yaml = yaml.safe_load(component.replace("{{", "__"))

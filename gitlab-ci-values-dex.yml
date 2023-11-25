@@ -55,5 +55,5 @@ config:
   - id: exphost-controller
     name: exphost-controller
     redirectURIs:
-    - https://__DOMAIN__/oauth2/callback
+    - https://__DOMAIN__/console/oauth2/callback
     secret: Yp4fGf79FutdBDJArQqxhUiVbufVxjzu
