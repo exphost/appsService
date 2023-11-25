@@ -200,7 +200,7 @@ spec:
 
     def get_instances(self, org, app):
         if not os.path.exists(self._instances_dir(org, app)):
-            raise FileNotFoundError
+            return {}
         instances = {}
         for instance in next(os.walk(self._instances_dir(org, app)))[2]:
             instance = instance.replace(".yml", "")

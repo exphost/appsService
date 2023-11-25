@@ -71,3 +71,11 @@ def test_get_instances(client):
             }
         }
     }
+
+
+def test_get_instances_new_app(client):
+    response = client.get(
+        "/api/apps/v1/instances/?org=test-org&app=app2",
+        headers={'Authorization': 'Bearer ' + USER})
+    assert response.status_code == 200
+    assert response.json == {}

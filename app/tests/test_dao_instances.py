@@ -1,4 +1,3 @@
-import pytest
 import yaml
 import os
 
@@ -37,13 +36,13 @@ def test_get_instances(app):
 
 
 def test_get_instances_non_existing_org(app):
-    with pytest.raises(FileNotFoundError):
-        app.dao.get_instances("non-existing-org", "app1")
+    instances = app.dao.get_instances("non-existing-org", "app1")
+    assert instances == {}
 
 
 def test_get_instances_non_existing_app(app):
-    with pytest.raises(FileNotFoundError):
-        app.dao.get_instances("test-org", "non-existing-app")
+    instances = app.dao.get_instances("test-org", "non-existing-app")
+    assert instances == {}
 
 
 def test_create_instance_manifest_content(app):
