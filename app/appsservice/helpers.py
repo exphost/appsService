@@ -24,3 +24,18 @@ def has_access_to_org(fn):
             return {'error': 'Org not permitted'}, 403
         return fn(*args, **kwargs)
     return wrapper
+
+
+def required_fields(fields):
+    def decorator(fn):
+        def wrapper(*args, **kwargs):
+            for field in fields:
+                if request.method == "POST":
+                    if field not in request.json:
+                        return {'message': f'Missing field {field}'}, 400
+                elif request.method == "GET":
+                    if field not in request.args:
+                        return {'message': f'Missing field {field}'}, 400
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator

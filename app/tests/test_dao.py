@@ -18,34 +18,56 @@ def test_get_app(app):
     get_app = app.dao.get_app(org="test-org", app="app1")
     expected = {
         'name': 'app1',
-        'components': [{
-            'chart': 'generic-app',
-            'repo': 'https://gitlab.exphost.pl/charts',
-            'version': 'v0.0.0-3-ge9ad446',
-            'name': 'app2',  # noqa E501
-            'type': 'asd',
-            'values': {
-                'image': {
-                    'repository': 'registry.gitlab.exphost.pl/onelink/onelink-frontend',  # noqa E501
-                    'tag': 'v0.0.0-5-g2b2479d',
-                }
-            }
-        }, {
-            'chart': 'generic-app',
-            'repo': 'https://gitlab.exphost.pl/charts',
-            'version': 'v0.0.0-3-ge9ad446',
-            'name': 'frontend',  # noqa E501
-            'type': 'react',
-            'values': {
-                'image': {
-                    'repository': 'registry.gitlab.exphost.pl/onelink/onelink-frontend',  # noqa E501
-                    'tag': 'v0.0.0-5-g2b2479d',
-                }
-            }
+        'org': 'test-org',
+        'config': {
+            'domain': 'example.com'
         },
-        ]
+        'components': {
+            'frontend': {
+                'helm': {
+                    'type': 'simple'
+                },
+                'version': 'v0.0.0-5-g2b2479d',
+                'dockerfile':                 {
+                    'type': 'react',
+                },
+                'config': {
+                    'hostnames': [
+                        'www',
+                    ]
+                },
+            },
+            'backend': {
+                'helm': {
+                    'type': 'simple'
+                },
+                'version': 'v0.0.0-5-g2b2479d',
+                'dockerfile': {
+                    'type': 'python',
+                },
+                'config': {
+                    'hostnames': [
+                        'api',
+                    ],
+                },
+            },
+            'backend2': {
+                'helm': {
+                    'type': 'custom'
+                },
+                'version': 'v0.0.0-5-g2b2479d',
+                'dockerfile': {
+                    'type': 'custom',
+                },
+                'config': {
+                    'hostnames': [
+                        'app2',
+                    ],
+                },
+            },
+        },
     }
-    assert expected.items() <= get_app.items()
+    assert expected == get_app
 
 
 def test_app_not_found(app):
@@ -55,113 +77,181 @@ def test_app_not_found(app):
 
 def test_add_component(app):
     app.dao.create_app(org="test-org", app="app4")
-    app.dao.save_component(org="test-org", app="app4", component={
-        "chart": "nginx",
-        "name": "frontend",
-        "repo": "repo4",
-        "version": "1.1.0",
-        "type": "nginx",
-        "values": {
-        }
+    app.dao.save_component(org="test-org", app="app4", name="frontend", spec={
+       "helm": {
+           "type": "nginx"
+       },
+       "version": "20231213-12150001",
+       "dockerfile": None,
+       "config": {
+           "hostnames": [
+               "www",
+           ],
+       },
     })
-    get_app = app.dao.get_app(org="test-org", app="app4")
+    get_app = app.dao.get_app(org="test-org", app="app4")["components"]["frontend"] # noqa E501
     expected = {
-        'components': [{
-            "chart": "nginx",
-            "repo": "repo4",
-            "version": "1.1.0",
-            "name": 'frontend',
-            "type": "nginx",
-            "values": {}
-        }]
+        "helm": {
+            "type": "nginx"
+        },
+        "version": "20231213-12150001",
+        "dockerfile": None,
+        "config": {
+            "hostnames": [
+                "www",
+            ]
+        },
     }
-    assert expected.items() <= get_app.items()
+    assert expected == get_app
 
 
 def test_update_app(app):
-    app.dao.create_app(org="test-org", app="app3")
-    app.dao.save_component(org="test-org", app="app3", component={
-        "chart": "nginx",
-        "name": "frontend",
-        "repo": "repo4",
-        "version": "1.1.0",
-        "type": "nginx",
-        "values": {}
-    })
+    app.dao.create_app(
+        org="test-org",
+        app="app3",
+        spec={"config": {'domain': 'example.com'}}
+    )
     app.dao.save_component(
         org="test-org",
         app="app3",
-        component={
-            "chart": "nginx",
-            "name": "frontend",
-            "repo": "repo5",
-            "version": "1.2.0",
-            "type": "nginx",
-            "values": {}
-        })
-    get_app = app.dao.get_app(org="test-org", app="app3")
+        name="frontned",
+        spec={
+            "helm": {
+                "type": "nginx"
+            },
+            "version": "20231213-12150001",
+            "dockerfile": None,
+            "config": {
+                "hostnames": [
+                    "www",
+                ],
+            },
+        }
+    )
+    app.dao.save_app(
+        org="test-org",
+        app="app3",
+        spec={
+            "config": {
+                'domain': 'example.io'
+            },
+        }
+    )
+    get_app = app.dao.get_app(org="test-org", app="app3")["config"]
     expected = {
-        "components": [{
-            "name": 'frontend',  # noqa E501
-            "chart": "nginx",
-            "repo": "repo5",
-            "version": "1.2.0",
-            "type": "nginx",
-            "values": {},
-        }]
+        'domain': 'example.io'
     }
-    assert expected.items() <= get_app.items()
+    assert expected == get_app
+
+
+def test_update_component(app):
+    app.dao.create_app(org="test-org", app="app3")
+    app.dao.save_component(
+        org="test-org",
+        app="app3",
+        name="frontned",
+        spec={
+            "helm": {
+                "type": "nginx"
+            },
+            "version": "20231213-12150001",
+            "dockerfile": None,
+            "config": {
+                "hostnames": [
+                    "www",
+                ],
+            },
+        }
+    )
+    app.dao.save_component(
+        org="test-org",
+        app="app3",
+        name="frontend",
+        spec={
+            "helm": {
+                "type": "nginx"
+            },
+            "version": "20231213-12150003",
+            "dockerfile": None,
+            "config": {
+                "hostnames": [
+                    "www2",
+                ],
+            },
+        })
+    get_app = app.dao.get_app(org="test-org", app="app3")["components"]["frontend"] # noqa E501
+    expected = {
+       "helm": {
+           "type": "nginx"
+       },
+       "version": "20231213-12150003",
+       "dockerfile": None,
+       "config": {
+           "hostnames": [
+               "www2",
+           ],
+       },
+    }
+    assert expected == get_app
 
 
 def test_delete_component(app):
     app.dao.delete_component(
         org="test-org",
         app="app1",
-        component={"type": "react", "name": "frontend"})
-    get_app = app.dao.get_app(org="test-org", app="app1")
+        name="frontend")
+    get_app = app.dao.get_app(org="test-org", app="app1")["components"]
     expected = {
-        "components": [{
-            'chart': 'generic-app',
-            'repo': 'https://gitlab.exphost.pl/charts',
-            'version': 'v0.0.0-3-ge9ad446',
-            'name': 'app2',  # noqa E501
-            'type': 'asd',
-            'values': {
-                'image': {
-                    'repository': 'registry.gitlab.exphost.pl/onelink/onelink-frontend',  # noqa E501
-                    'tag': 'v0.0.0-5-g2b2479d',
-                }
-            }
-        }]
+       'backend': {
+           'helm': {
+               'type': 'simple'
+           },
+           'version': 'v0.0.0-5-g2b2479d',
+           'dockerfile': {
+               'type': 'python',
+           },
+           'config': {
+               'hostnames': [
+                   'api',
+               ],
+           },
+       },
+       'backend2': {
+           'helm': {
+               'type': 'custom'
+           },
+           'version': 'v0.0.0-5-g2b2479d',
+           'dockerfile': {
+               'type': 'custom',
+           },
+           'config': {
+               'hostnames': [
+                   'app2',
+               ],
+           },
+       },
     }
-    assert expected.items() <= get_app.items()
-
-
-def test_update_component(app):
-    app.dao.save_component(
-        org="test-org",
-        app="app1",
-        component={
-            "type": "react",
-            "name": "frontend",
-            "version": "1.1.0",
-            "values": {
-                "repository": "registry.gitlab.exphost.pl/onelink/onelink-frontend",  # noqa E501
-                "tag": "1.2.0",
-            },
-        })
-    components = app.dao.get_app(org="test-org", app="app1")['components']
-    assert len(components) == 2
-    assert components[1]["version"] == "1.1.0"
-    assert components[1]["type"] == "react"
+    assert expected == get_app
 
 
 def test_save_component_non_existing_app(app):
     with pytest.raises(FileNotFoundError):
-        app.dao.save_component(org="test-org3", app="app5", component={
-            "type": "nginx",
-            "name": "frontend",
-        })
+        app.dao.save_component(
+            org="test-org3",
+            app="app5",
+            name="frontend",
+            spec={
+                "helm": {
+                    "type": "nginx"
+                },
+                "version": "20231213-12150001",
+                "dockerfile": None,
+                "config": {
+                    "hostnames": [
+                        "www",
+                    ],
+                },
+            })
 
 
 def test_delete_component_non_existing_app(app):
@@ -169,27 +259,23 @@ def test_delete_component_non_existing_app(app):
         app.dao.delete_component(
             org="test-org3",
             app="app5",
-            component={"type": "react", "name": "frontend"})
+            name="frontend")
 
 
 def test_delete_component_non_existing_component(app):
     app.dao.delete_component(
         org="test-org",
         app="app1",
-        component={"type": "pelican", "name": "frontend"})
+        name="frontend2")
 
 
 def test_get_component(app):
     component = app.dao.get_component(
         org="test-org",
         app="app1",
-        component={
-            "name": "app2",
-            "type": "asd"
-            })
-    assert component["name"] == 'app2'
-    assert component["repo"] == "https://gitlab.exphost.pl/charts"
-    assert component["version"] == "v0.0.0-3-ge9ad446"
+        name="frontend")
+    assert type(component["helm"]) == dict
+    assert component["version"] == "v0.0.0-5-g2b2479d"
 
 
 def test_get_component_non_existing_component(app):
@@ -197,10 +283,7 @@ def test_get_component_non_existing_component(app):
         app.dao.get_component(
             org="test-org",
             app="app1",
-            component={
-                "type": "pelican",
-                "name": "frontend"
-            })
+            name="frontend2")
 
 
 def test_get_component_non_existing_app(app):
@@ -208,72 +291,93 @@ def test_get_component_non_existing_app(app):
         app.dao.get_component(
             org="test-org",
             app="app5",
-            component={
-                "type": "pelican",
-                "name": "frontend"
-            })
+            name="frontend")
 
 
-def test_create_app(app):
-    apppath = app.dao._app_dir(org="test-org", app="app5")
-    app.dao.create_app(org="test-org", app="app5")
+def test_create_app_yaml(app):
+    apppath = app.dao._app_dir(org="test-org")
+    app.dao.create_app(
+        org="test-org",
+        app="app5",
+        spec={
+            "config": {
+                "domain": "example.com"
+            }
+        })
 
     assert os.path.exists(apppath)
-    assert os.path.exists(os.path.join(apppath, "Chart.yaml"))
+    appfile = os.path.join(apppath, "test-org.app5.yml")
+    assert os.path.exists(appfile)
 
-    chart = yaml.safe_load(open(os.path.join(apppath, "Chart.yaml")).read())
-    assert chart["apiVersion"] == "v2"
-    assert chart["name"] == "app5"
-    assert chart["type"] == "application"
-
-
-def test_yaml_syntax(app):
-    app.dao.save_component(org="test-org", app="app1", component={
-        "name": "nginx1",
-        "type": "nginx",
-        "chart": "nginx",
-        "repo": "https://charts.gitlab.io/",
-        "version": "1.2.3",
-        "values": {
-            "key1": "value1",
-            "key2": "value2",
-        }
-    })
-    apppath = app.dao._app_dir(org="test-org", app="app1")
-    assert os.path.exists(apppath)
-    component_path = os.path.join(apppath, "templates", "nginx-nginx1.yml")
-    assert os.path.exists(component_path)
     manifest = yaml.load(
-        open(component_path).read().replace('{{', '__'),
+        open(appfile).read(),
         Loader=yaml.UnsafeLoader)
     expected = yaml.safe_load("""
+apiVersion: exphost.pl/v1alpha1
 kind: Application
-apiVersion: argoproj.io/v1alpha1
 metadata:
-    name: __ printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}-nginx---nginx1
-    namespace: argocd
-    annotations:
-        exphost.pl/type: nginx
+    name: test-org.app5
+    labels:
+        org: test-org
+        app: app5
 spec:
-  project: tenant-test-org
-  source:
-    repoURL: https://charts.gitlab.io/
-    chart: nginx
-    targetRevision: 1.2.3
-    helm:
-      values: |
-        key1: value1
-        key2: value2
-  destination:
-    namespace: tenant-test-org-app1
-    server: https://kubernetes.default.svc
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    - CreateNamespace=true
-""")  # noqa E501
+    config:
+        domain: example.com
+    components: {}
+""")
     assert expected == manifest
 
-# test_create_app_already_exists
+
+def test_create_app_with_component_yaml(app):
+    apppath = app.dao._app_dir(org="test-org")
+    app.dao.create_app(
+        org="test-org",
+        app="app5",
+        spec={
+            "config": {
+                "domain": "example.com"
+            }
+        })
+    app.dao.save_component(
+        org="test-org",
+        app="app5",
+        name="nginx1",
+        spec={
+            "helm": {
+                "type": "nginx"
+            },
+            "version": "1.2.3",
+            "values": {
+                "key1": "value1",
+                "key2": "value2",
+            },
+        })
+
+    assert os.path.exists(apppath)
+    appfile = os.path.join(apppath, "test-org.app5.yml")
+    assert os.path.exists(appfile)
+
+    manifest = yaml.load(
+        open(appfile).read(),
+        Loader=yaml.UnsafeLoader)
+    expected = yaml.safe_load("""
+apiVersion: exphost.pl/v1alpha1
+kind: Application
+metadata:
+    name: test-org.app5
+    labels:
+        org: test-org
+        app: app5
+spec:
+    config:
+        domain: example.com
+    components:
+        nginx1:
+            helm:
+                type: nginx
+            version: 1.2.3
+            values:
+                key1: value1
+                key2: value2
+""")
+    assert expected == manifest

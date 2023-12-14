@@ -1,0 +1,38 @@
+apiVersion: exphost.pl/v1alpha1
+kind: Application
+metadata:
+  name: test-org.app1
+  labels:
+    org: test-org
+    app: app1
+spec:
+  config:
+    domain: example.com
+  components:
+    frontend:
+      version: v0.0.0-5-g2b2479d
+      helm:
+        type: simple
+      dockerfile:
+        type: react
+      config:
+        hostnames:
+          - www
+    backend:
+      version: v0.0.0-5-g2b2479d
+      helm:
+        type: simple
+      dockerfile:
+        type: python
+      config:
+        hostnames:
+          - api
+    backend2:
+      version: v0.0.0-5-g2b2479d
+      helm:
+        type: custom
+      dockerfile:
+        type: custom
+      config:
+        hostnames:
+          - app2

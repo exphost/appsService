@@ -1,4 +1,0 @@
-apiVersion: v2
-name: app1
-type: application
-versoin: 0.0.0-live

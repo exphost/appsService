@@ -1,6 +1,6 @@
 from flask import Flask
 import os
-from . import nginx
+from . import components
 from . import app as app_blueprint
 from . import instances
 from . import dao
@@ -21,7 +21,7 @@ def create_app(test_config=None):
         return False
     app.dao = dao.AppsDao(app.config['WORKDIR'])
 
-    app.register_blueprint(nginx.bp)
+    app.register_blueprint(components.bp)
     app.register_blueprint(app_blueprint.bp)
     app.register_blueprint(instances.bp)
     return app

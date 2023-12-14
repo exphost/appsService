@@ -41,7 +41,7 @@ class App(Resource):
         except FileNotFoundError:
             pass
 
-        self.dao.create_app(request.json['org'], request.json['name'])
+        self.dao.create_app(request.json['org'], request.json['name'], spec={})
         return {'status': 'created'}, 201
 
     @has_access_to_org
