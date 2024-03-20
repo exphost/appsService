@@ -5,6 +5,7 @@ import os
 def test_get_instance(app):
     instance = app.dao.get_instance("test-org", "app1", "master")
     expected = {
+            "version": "v1.0.1",
             "values": {}
     }
     assert instance == expected
@@ -13,6 +14,7 @@ def test_get_instance(app):
 def test_get_instance_with_values(app):
     instance = app.dao.get_instance("test-org", "app1", "some-values")
     expected = {
+            "version": "v0.0.*-exphost-dev",
             "values": {
                 "key1": "value1",
             }
@@ -24,9 +26,11 @@ def test_get_instances(app):
     instances = app.dao.get_instances("test-org", "app1")
     expected = {
         "master": {
+            "version": "v1.0.1",
             "values": {}
         },
         "some-values": {
+            "version": "v0.0.*-exphost-dev",
             "values": {
                 "key1": "value1",
             }
@@ -47,6 +51,7 @@ def test_get_instances_non_existing_app(app):
 
 def test_create_instance_manifest_content(app):
     instance = {
+        "version": "v1.0.1",
         "values": {
             "key2": "value2",
         }
@@ -69,12 +74,12 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: apps/test-org/app1
-    repoURL: git@gitlab.exphost.pl:exphost-controller/test_tenants_repo.git
-    targetRevision: HEAD
+    chart: test-org.app1
     helm:
       values: |
         key2: value2
+    repoURL: https://chart.exphost.pl
+    targetRevision: "v1.0.1"
   syncPolicy:
     automated:
       prune: true

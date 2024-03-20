@@ -6,12 +6,13 @@ metadata:
   labels:
     org: test-org
     app: app1
+    version: v1.2.3
 spec:
   config:
     domain: example.com
   components:
     frontend:
-      version: v0.0.0-5-g2b2479d
+      version: v0.0.3
       helm:
         type: simple
       dockerfile:
@@ -20,7 +21,7 @@ spec:
         hostnames:
           - www
     backend:
-      version: v0.0.0-5-g2b2479d
+      version: v0.0.4
       helm:
         type: simple
       dockerfile:
@@ -29,7 +30,7 @@ spec:
         hostnames:
           - api
     backend2:
-      version: v0.0.0-5-g2b2479d
+      version: v0.0.5
       helm:
         type: custom
       dockerfile:

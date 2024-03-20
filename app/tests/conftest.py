@@ -9,6 +9,7 @@ from unittest.mock import patch
 def app():
     os.environ['USERS_DOMAIN'] = "users.example.com"
     os.environ['AUTHSERVICE_ENDPOINT'] = "https://auth.example.com"
+    os.environ['NAMESPACE'] = 'test-namespace'
     shutil.copytree("tests/files", "workdir", dirs_exist_ok=True)
     with patch('appsservice.helpers.requests.post') as mock_get:
         mock_get.return_value.status_code = 200

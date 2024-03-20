@@ -114,7 +114,7 @@ deploy branch:
     --set podAnnotations."app\.gitlab\.com/app"=$CI_PROJECT_PATH_SLUG
     --set podAnnotations."app\.gitlab\.com/env"=$CI_ENVIRONMENT_SLUG
     --set global.domain=${KUBE_NAMESPACE}.ci.exphost.pl
-    --wait --wait-for-jobs
+    --wait --wait-for-jobs --skip-crds
   - kubectl -n $KUBE_NAMESPACE rollout restart deployment test-appsservice
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

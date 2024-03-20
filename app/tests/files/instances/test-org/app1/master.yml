@@ -12,11 +12,11 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: apps/test-org/app1
-    repoURL: git@gitlab.exphost.pl:exphost-controller/test_tenants_repo.git
-    targetRevision: HEAD
+    chart: test-org.app1
     helm:
       values: ""
+    repoURL: https://chart.exphost.pl
+    targetRevision: "v1.0.1"
   syncPolicy:
     automated:
       prune: true

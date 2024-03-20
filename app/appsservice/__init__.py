@@ -4,6 +4,7 @@ from . import components
 from . import app as app_blueprint
 from . import instances
 from . import dao
+from . import versions
 
 
 def create_app(test_config=None):
@@ -24,4 +25,5 @@ def create_app(test_config=None):
     app.register_blueprint(components.bp)
     app.register_blueprint(app_blueprint.bp)
     app.register_blueprint(instances.bp)
+    app.register_blueprint(versions.bp)
     return app

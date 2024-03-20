@@ -29,6 +29,11 @@ def test_components_add(client, app):
     expected = {
         'helm': {
             'type': 'nginx',
+            'chart': {
+                'name': 'nginx',
+                'repository': 'https://charts.bitnami.com/bitnami',
+                'version': '15.10.3'
+            }
         },
         'dockerfile': None,
         'config': {
