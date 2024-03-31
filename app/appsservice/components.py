@@ -24,6 +24,23 @@ component_model = api.model(
 
 @api.route('/', endpoint='components')
 class Components(Resource):
+    @has_access_to_org
+    @required_fields(['org', 'app'])
+    def get(self):
+        org = request.args.get('org')
+        app = request.args.get('app')
+        try:
+            components = current_app.dao.get_components(org, app)
+        except FileNotFoundError as e:
+            return {'message': str(e)}, 404
+        if request.args.get('name'):
+            name = request.args.get('name')
+            return components.get(name, {}), 200
+        if request.args.get('type'):
+            type = request.args.get('type')
+            return {k: v for k, v in components.items() if v.get('helm', {}).get('type') == type}, 200  # noqa E501
+        return components
+
     @api.expect(component_model, validate=True)
     @has_access_to_org
     @required_fields(['org', 'app', 'name', 'spec'])

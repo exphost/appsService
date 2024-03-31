@@ -11,27 +11,36 @@ spec:
     domain: example.com
   components:
     frontend:
-      version: v0.0.0-5-g2b2479d
       helm:
-        type: simple
+        type: nginx
+        chart:
+          name: nginx
+          repository: https://charts.bitnami.com/bitnami
+          version: 15.10.3
       dockerfile:
         type: react
       config:
         hostnames:
           - www
     backend:
-      version: v0.0.0-5-g2b2479d
       helm:
         type: simple
+        chart:
+          name: nginx
+          repository: https://charts.bitnami.com/bitnami
+          version: 15.10.3
       dockerfile:
         type: python
       config:
         hostnames:
           - api
     backend2:
-      version: v0.0.0-5-g2b2479d
       helm:
         type: custom
+        chart:
+          name: nginx
+          repository: https://charts.bitnami.com/bitnami
+          version: 15.10.3
       dockerfile:
         type: custom
       config:

@@ -118,15 +118,19 @@ class AppsDao(object):
         with open(self._app_path(org, app), "w") as f:
             f.write(yaml.dump(app_yaml))
 
-    def get_component(self, org, app, name):
+    def get_components(self, org, app):
         if not self._is_app(org, app):
             raise FileNotFoundError
         app_yaml = yaml.safe_load(open(self._app_path(org, app)).read())
-        if not app_yaml["spec"].get("components", None):
+        return app_yaml["spec"].get("components", {})
+
+    def get_component(self, org, app, name):
+        components = self.get_components(org, app)
+        if not components:
             raise FileNotFoundError
-        if not app_yaml["spec"]["components"].get(name, None):
+        if not components.get(name, None):
             raise FileNotFoundError
-        return app_yaml["spec"]["components"][name]
+        return components[name]
 
     def create_app(self, org, app, spec={}):
         os.makedirs(self._app_dir(org), exist_ok=True)

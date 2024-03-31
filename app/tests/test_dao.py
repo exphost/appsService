@@ -25,9 +25,13 @@ def test_get_app(app):
         'components': {
             'frontend': {
                 'helm': {
-                    'type': 'simple'
+                    'type': 'nginx',
+                    'chart': {
+                        'name': 'nginx',
+                        'repository': 'https://charts.bitnami.com/bitnami',
+                        'version': '15.10.3'
+                    },
                 },
-                'version': 'v0.0.0-5-g2b2479d',
                 'dockerfile':                 {
                     'type': 'react',
                 },
@@ -39,9 +43,13 @@ def test_get_app(app):
             },
             'backend': {
                 'helm': {
-                    'type': 'simple'
+                    'type': 'simple',
+                    'chart': {
+                        'name': 'nginx',
+                        'repository': 'https://charts.bitnami.com/bitnami',
+                        'version': '15.10.3'
+                    },
                 },
-                'version': 'v0.0.0-5-g2b2479d',
                 'dockerfile': {
                     'type': 'python',
                 },
@@ -53,9 +61,13 @@ def test_get_app(app):
             },
             'backend2': {
                 'helm': {
-                    'type': 'custom'
+                    'type': 'custom',
+                    'chart': {
+                        'name': 'nginx',
+                        'repository': 'https://charts.bitnami.com/bitnami',
+                        'version': '15.10.3'
+                    },
                 },
-                'version': 'v0.0.0-5-g2b2479d',
                 'dockerfile': {
                     'type': 'custom',
                 },
@@ -81,9 +93,13 @@ def test_get_app_version(app):
         'components': {
             'frontend': {
                 'helm': {
-                    'type': 'simple'
+                    'type': 'simple',
+                    'chart': {
+                        'name': 'nginx',
+                        'repository': 'https://charts.bitnami.com/bitnami',
+                        'version': '15.10.3'
+                    },
                 },
-                'version': 'v0.0.3',
                 'dockerfile':                 {
                     'type': 'react',
                 },
@@ -95,9 +111,13 @@ def test_get_app_version(app):
             },
             'backend': {
                 'helm': {
-                    'type': 'simple'
+                    'type': 'simple',
+                    'chart': {
+                        'name': 'nginx',
+                        'repository': 'https://charts.bitnami.com/bitnami',
+                        'version': '15.10.3'
+                    },
                 },
-                'version': 'v0.0.4',
                 'dockerfile': {
                     'type': 'python',
                 },
@@ -109,9 +129,13 @@ def test_get_app_version(app):
             },
             'backend2': {
                 'helm': {
-                    'type': 'custom'
+                    'type': 'custom',
+                    'chart': {
+                        'name': 'nginx',
+                        'repository': 'https://charts.bitnami.com/bitnami',
+                        'version': '15.10.3'
+                    },
                 },
-                'version': 'v0.0.5',
                 'dockerfile': {
                     'type': 'custom',
                 },
@@ -270,9 +294,13 @@ def test_delete_component(app):
     expected = {
        'backend': {
            'helm': {
-               'type': 'simple'
+               'type': 'simple',
+               'chart': {
+                   'name': 'nginx',
+                   'repository': 'https://charts.bitnami.com/bitnami',
+                   'version': '15.10.3'
+               },
            },
-           'version': 'v0.0.0-5-g2b2479d',
            'dockerfile': {
                'type': 'python',
            },
@@ -284,9 +312,13 @@ def test_delete_component(app):
        },
        'backend2': {
            'helm': {
-               'type': 'custom'
+               'type': 'custom',
+               'chart': {
+                   'name': 'nginx',
+                   'repository': 'https://charts.bitnami.com/bitnami',
+                   'version': '15.10.3'
+               },
            },
-           'version': 'v0.0.0-5-g2b2479d',
            'dockerfile': {
                'type': 'custom',
            },
@@ -341,7 +373,6 @@ def test_get_component(app):
         app="app1",
         name="frontend")
     assert type(component["helm"]) == dict
-    assert component["version"] == "v0.0.0-5-g2b2479d"
 
 
 def test_get_component_non_existing_component(app):

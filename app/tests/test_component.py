@@ -89,3 +89,35 @@ def test_components_add_wrong_org(client):
               'name': 'add-app'},
         headers={'Authorization': 'Bearer ' + USER})
     assert response.status_code == 403
+
+
+def test_component_list_by_type(client, app):
+    response = client.get(
+        '/api/apps/v1/components/?org=test-org&app=app1&type=nginx',
+        headers={'Authorization': 'Bearer ' + USER})
+    assert response.status_code == 200
+    assert len(response.json) == 1
+    assert 'frontend' in response.json
+
+
+def test_component_get(client, app):
+    response = client.get(
+        '/api/apps/v1/components/?org=test-org&app=app1&name=frontend',
+        headers={'Authorization': 'Bearer ' + USER})
+    assert response.status_code == 200
+    assert response.json == {
+        'helm': {
+            'type': 'nginx',
+            'chart': {
+                'name': 'nginx',
+                'repository': 'https://charts.bitnami.com/bitnami',
+                'version': '15.10.3'
+            }
+        },
+        'dockerfile': {
+            'type': 'react'
+        },
+        'config': {
+            'hostnames': ['www']
+        }
+    }
