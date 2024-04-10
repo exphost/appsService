@@ -68,7 +68,7 @@ class AppsDao(object):
             return []
         apps = set()
         for f_name in [i for i in next(os.walk(org_dir))[2]]:
-            tokens = re.split(rf"{org}\.(\w+)\..*yml", f_name)
+            tokens = re.split(rf"{org}\.([\w-]+)\..*yml", f_name)
             if len(tokens) > 1:
                 apps.add(tokens[1])
         return sorted(apps)
