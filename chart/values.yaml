@@ -54,3 +54,4 @@ git_repo:
     #  YX1aEdLM0gcNoorXjlrKIYmA7B4sW/CGnziv9kMNd/ZD7xUyQU79/dVExaEmtWvQrx9Glh
     #  0hGlxzry/5tFMAAAAUdG9yZ2lyZW5Ac21hcnRyYXB0b3IBAgMEBQYH
     #  -----END OPENSSH PRIVATE KEY-----
+chart_repo: "http://controller-helmchartservice.tenant-exphost-services:5000/api/charts/v1/"

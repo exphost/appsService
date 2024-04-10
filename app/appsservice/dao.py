@@ -23,11 +23,13 @@ PREDEFINED_CHARTS = {
 
 
 class AppsDao(object):
-    def __init__(self, workdir):
+    def __init__(self, app):
         self.namespace = os.environ.get('NAMESPACE', None)
         if not self.namespace:
             self.namespace = open("/var/run/secrets/kubernetes.io/serviceaccount/namespace", "r").read()  # noqa E501
-        self.workdir = workdir
+        self.workdir = app.config['WORKDIR']
+        # get from current app
+        self.chart_repo = app.config['CHART_REPO']
 
     def _app_path(self, org, app, version=None):
         version_suffix = f".{version}" if version else ""
@@ -171,7 +173,7 @@ spec:
   project: default
   source:
     chart: { org }.{ app }
-    repoURL: https://chart.exphost.pl
+    repoURL: {self.chart_repo}
     targetRevision: { instance.get('version', 'v0.0.*-exphost-dev') }
     helm:
       values: |

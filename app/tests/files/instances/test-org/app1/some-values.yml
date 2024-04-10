@@ -16,7 +16,7 @@ spec:
     helm:
       values: |
         key1: value1
-    repoURL: https://chart.exphost.pl
+    repoURL: https://chart2.exphost.pl
     targetRevision: "v0.0.*-exphost-dev"
   syncPolicy:
     automated:

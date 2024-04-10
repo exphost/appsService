@@ -78,7 +78,7 @@ spec:
     helm:
       values: |
         key2: value2
-    repoURL: https://chart.exphost.pl
+    repoURL: https://chart2.exphost.pl
     targetRevision: "v1.0.1"
   syncPolicy:
     automated:
