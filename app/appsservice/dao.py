@@ -170,7 +170,7 @@ spec:
   destination:
     namespace: { org }-{ app }-{ instance_name }
     server: https://kubernetes.default.svc
-  project: default
+  project: { org }.{ app }
   source:
     chart: { org }.{ app }
     repoURL: {self.chart_repo}

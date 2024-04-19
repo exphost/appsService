@@ -72,7 +72,7 @@ spec:
   destination:
     namespace: test-org-app1-instance1
     server: https://kubernetes.default.svc
-  project: default
+  project: test-org.app1
   source:
     chart: test-org.app1
     helm:
