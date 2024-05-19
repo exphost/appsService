@@ -22,6 +22,9 @@ spec:
       config:
         hostnames:
           - www
+      values:
+        containerSecurityContext:
+          enabled: false
     backend:
       helm:
         type: simple

@@ -40,6 +40,11 @@ def test_get_app(app):
                         'www',
                     ]
                 },
+                'values': {
+                    'containerSecurityContext': {
+                        'enabled': False
+                    },
+                },
             },
             'backend': {
                 'helm': {
@@ -186,6 +191,11 @@ def test_add_component(app):
                 "www",
             ]
         },
+        'values': {
+            'containerSecurityContext': {
+                'enabled': False
+            },
+        },
     }
     assert expected == get_app
 
@@ -280,6 +290,11 @@ def test_update_component(app):
             "hostnames": [
                 "www2",
             ],
+        },
+        'values': {
+            'containerSecurityContext': {
+                'enabled': False
+            },
         },
     }
     assert expected == get_app
@@ -482,6 +497,8 @@ spec:
             values:
                 key1: value1
                 key2: value2
+                containerSecurityContext:
+                    enabled: false
 """)
     assert expected == manifest
 

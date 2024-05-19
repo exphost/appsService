@@ -10,7 +10,12 @@ PREDEFINED_CHARTS = {
             'name': 'nginx',
             'repository': 'https://charts.bitnami.com/bitnami',
             'version': '15.10.3'
-        }
+        },
+        'values': {
+            'containerSecurityContext': {
+                'enabled': False
+            },
+        },
     },
     'maria-db': {
         'chart': {
@@ -107,6 +112,10 @@ class AppsDao(object):
             helm = app_yaml["spec"]["components"][name]["helm"]
             if helm.get("type", None) and not helm.get("chart", None):
                 helm["chart"] = PREDEFINED_CHARTS[helm["type"]]["chart"]
+            values_new = dict(PREDEFINED_CHARTS[helm["type"]].get("values", {}))  # noqa E501
+            values_new.update(spec.get("config", {}).get("raw_values", {}))  # noqa E501
+            values_new.update(app_yaml["spec"]["components"][name].get("values", {}))  # noqa E501
+            app_yaml["spec"]["components"][name]["values"] = values_new
         with open(self._app_path(org, app), "w") as f:
             f.write(yaml.dump(app_yaml))
 

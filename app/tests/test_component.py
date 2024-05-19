@@ -14,8 +14,11 @@ def test_components_add(client, app):
                 },
                 'dockerfile': None,
                 'config': {
-                    'hostnames': ['www']
-                }
+                    'hostnames': ['www'],
+                    'raw_values': {
+                        'aaa': 'bbb'
+                    },
+                },
             }
         },
         headers={'Authorization': 'Bearer ' + USER})
@@ -37,8 +40,17 @@ def test_components_add(client, app):
         },
         'dockerfile': None,
         'config': {
-            'hostnames': ['www']
-        }
+            'hostnames': ['www'],
+            'raw_values': {
+                'aaa': 'bbb'
+            },
+        },
+        'values': {
+            'containerSecurityContext': {
+                'enabled': False
+            },
+            'aaa': 'bbb',
+        },
     }
     assert expected == component
 
@@ -119,5 +131,10 @@ def test_component_get(client, app):
         },
         'config': {
             'hostnames': ['www']
-        }
+        },
+        'values': {
+            'containerSecurityContext': {
+                'enabled': False
+            },
+        },
     }
