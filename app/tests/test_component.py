@@ -49,6 +49,9 @@ def test_components_add(client, app):
             'containerSecurityContext': {
                 'enabled': False
             },
+            'service': {
+                'type': 'ClusterIP'
+            },
             'aaa': 'bbb',
         },
     }
@@ -135,6 +138,9 @@ def test_component_get(client, app):
         'values': {
             'containerSecurityContext': {
                 'enabled': False
+            },
+            'service': {
+                'type': 'ClusterIP'
             },
         },
     }

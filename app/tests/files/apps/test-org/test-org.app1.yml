@@ -25,6 +25,8 @@ spec:
       values:
         containerSecurityContext:
           enabled: false
+        service:
+          type: ClusterIP
     backend:
       helm:
         type: simple

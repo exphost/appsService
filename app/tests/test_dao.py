@@ -44,6 +44,9 @@ def test_get_app(app):
                     'containerSecurityContext': {
                         'enabled': False
                     },
+                    'service': {
+                        'type': 'ClusterIP'
+                    },
                 },
             },
             'backend': {
@@ -195,6 +198,9 @@ def test_add_component(app):
             'containerSecurityContext': {
                 'enabled': False
             },
+            'service': {
+                'type': 'ClusterIP'
+            },
         },
     }
     assert expected == get_app
@@ -294,6 +300,9 @@ def test_update_component(app):
         'values': {
             'containerSecurityContext': {
                 'enabled': False
+            },
+            'service': {
+                'type': 'ClusterIP'
             },
         },
     }
@@ -499,6 +508,8 @@ spec:
                 key2: value2
                 containerSecurityContext:
                     enabled: false
+                service:
+                    type: ClusterIP
 """)
     assert expected == manifest
 

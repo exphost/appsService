@@ -15,6 +15,9 @@ PREDEFINED_CHARTS = {
             'containerSecurityContext': {
                 'enabled': False
             },
+            'service': {
+                'type': 'ClusterIP'
+            },
         },
     },
     'maria-db': {
