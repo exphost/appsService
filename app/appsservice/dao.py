@@ -2,31 +2,10 @@
 import os
 import yaml
 import re
+from .apps import nginx as nginx_app
 
-
-PREDEFINED_CHARTS = {
-    'nginx': {
-        'chart': {
-            'name': 'nginx',
-            'repository': 'https://charts.bitnami.com/bitnami',
-            'version': '15.10.3'
-        },
-        'values': {
-            'containerSecurityContext': {
-                'enabled': False
-            },
-            'service': {
-                'type': 'ClusterIP'
-            },
-        },
-    },
-    'maria-db': {
-        'chart': {
-            'name': 'mariadb',
-            'repository': 'https://charts.bitnami.com/bitnami',
-            'version': '16.0.2'
-        }
-    },
+APPS = {
+    "nginx": nginx_app,
 }
 
 
@@ -110,15 +89,13 @@ class AppsDao(object):
             app_yaml["spec"]["components"] = {}
         if not app_yaml["spec"]["components"].get(name, None):
             app_yaml["spec"]["components"][name] = {}
-        app_yaml["spec"]["components"][name].update(spec)
-        if app_yaml["spec"]["components"][name].get("helm", None):
-            helm = app_yaml["spec"]["components"][name]["helm"]
+        component = app_yaml["spec"]["components"][name]
+        component.update(spec)
+        if component.get("helm", None):
+            helm = component["helm"]
             if helm.get("type", None) and not helm.get("chart", None):
-                helm["chart"] = PREDEFINED_CHARTS[helm["type"]]["chart"]
-            values_new = dict(PREDEFINED_CHARTS[helm["type"]].get("values", {}))  # noqa E501
-            values_new.update(spec.get("config", {}).get("raw_values", {}))  # noqa E501
-            values_new.update(app_yaml["spec"]["components"][name].get("values", {}))  # noqa E501
-            app_yaml["spec"]["components"][name]["values"] = values_new
+                helm["chart"] = APPS[helm["type"]].prepare_chart(component)
+            component["values"] = APPS[helm["type"]].prepare_values(component)
         with open(self._app_path(org, app), "w") as f:
             f.write(yaml.dump(app_yaml))
 
