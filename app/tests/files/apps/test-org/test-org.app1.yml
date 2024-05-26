@@ -8,7 +8,7 @@ metadata:
     app: app1
 spec:
   config:
-    domain: example.com
+    domain: test-org-app1.domain.com
   components:
     frontend:
       helm:

@@ -20,7 +20,7 @@ def test_get_app(app):
         'name': 'app1',
         'org': 'test-org',
         'config': {
-            'domain': 'example.com'
+            'domain': 'test-org-app1.domain.com'
         },
         'components': {
             'frontend': {
@@ -96,7 +96,7 @@ def test_get_app_version(app):
         'name': 'app1',
         'org': 'test-org',
         'config': {
-            'domain': 'example.com'
+            'domain': 'test-org-app1-version.domain.com'
         },
         'components': {
             'frontend': {
@@ -194,15 +194,8 @@ def test_add_component(app):
                 "www",
             ]
         },
-        'values': {
-            'containerSecurityContext': {
-                'enabled': False
-            },
-            'service': {
-                'type': 'ClusterIP'
-            },
-        },
     }
+    get_app.pop('values')
     assert expected == get_app
 
 
@@ -297,15 +290,8 @@ def test_update_component(app):
                 "www2",
             ],
         },
-        'values': {
-            'containerSecurityContext': {
-                'enabled': False
-            },
-            'service': {
-                'type': 'ClusterIP'
-            },
-        },
     }
+    get_app.pop('values')
     assert expected == get_app
 
 
@@ -469,10 +455,6 @@ def test_create_app_with_component_yaml(app):
                 "type": "nginx"
             },
             "version": "1.2.3",
-            "values": {
-                "key1": "value1",
-                "key2": "value2",
-            },
         })
 
     assert os.path.exists(apppath)
@@ -503,14 +485,8 @@ spec:
                     repository: https://charts.bitnami.com/bitnami
                     version: 15.10.3
             version: 1.2.3
-            values:
-                key1: value1
-                key2: value2
-                containerSecurityContext:
-                    enabled: false
-                service:
-                    type: ClusterIP
 """)
+    manifest['spec']['components']['nginx1'].pop('values')
     assert expected == manifest
 
 

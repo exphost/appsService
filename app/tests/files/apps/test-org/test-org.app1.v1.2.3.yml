@@ -9,7 +9,7 @@ metadata:
     version: v1.2.3
 spec:
   config:
-    domain: example.com
+    domain: test-org-app1-version.domain.com
   components:
     frontend:
       helm:
