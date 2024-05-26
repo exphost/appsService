@@ -95,7 +95,7 @@ class AppsDao(object):
             helm = component["helm"]
             if helm.get("type", None) and not helm.get("chart", None):
                 helm["chart"] = APPS[helm["type"]].prepare_chart(component)
-            component["values"] = APPS[helm["type"]].prepare_values(component)
+            component["values"] = APPS[helm["type"]].prepare_values(component, app_yaml)  # noqa E501
         with open(self._app_path(org, app), "w") as f:
             f.write(yaml.dump(app_yaml))
 

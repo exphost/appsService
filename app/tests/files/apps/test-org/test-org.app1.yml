@@ -27,6 +27,11 @@ spec:
           enabled: false
         service:
           type: ClusterIP
+        ingress:
+          enabled: true
+          path: /
+          hostname: www.test-org-app1.domain.com
+          extraHosts: []
     backend:
       helm:
         type: simple

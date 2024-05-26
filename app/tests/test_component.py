@@ -53,6 +53,12 @@ def test_components_add(client, app):
                 'type': 'ClusterIP'
             },
             'aaa': 'bbb',
+            'ingress': {
+                'enabled': True,
+                'hostname': 'www.test-org-app1.domain.com',
+                'extraHosts': [],
+                'path': '/',
+            }
         },
     }
     assert expected == component
@@ -142,5 +148,11 @@ def test_component_get(client, app):
             'service': {
                 'type': 'ClusterIP'
             },
+            'ingress': {
+                'enabled': True,
+                'hostname': 'www.test-org-app1.domain.com',
+                'extraHosts': [],
+                'path': '/',
+            }
         },
     }

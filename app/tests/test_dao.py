@@ -47,6 +47,12 @@ def test_get_app(app):
                     'service': {
                         'type': 'ClusterIP'
                     },
+                    'ingress': {
+                        'enabled': True,
+                        'hostname': 'www.test-org-app1.domain.com',
+                        'extraHosts': [],
+                        'path': '/',
+                    }
                 },
             },
             'backend': {
