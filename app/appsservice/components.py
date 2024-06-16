@@ -54,3 +54,17 @@ class Components(Resource):
         except FileNotFoundError as e:
             return {'message': str(e)}, 404
         return {}, 201
+
+    @has_access_to_org
+    @required_fields(['org', 'app', 'name'])
+    def delete(self):
+        org = request.args.get('org')
+        app = request.args.get('app')
+        name = request.args.get('name')
+        try:
+            deleted = current_app.dao.delete_component(org, app, name)
+            if not deleted:
+                return {'message': 'Component not found'}, 404
+        except FileNotFoundError as e:
+            return {'message': str(e)}, 404
+        return {}, 204

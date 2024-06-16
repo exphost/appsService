@@ -104,10 +104,11 @@ class AppsDao(object):
             raise FileNotFoundError
         app_yaml = yaml.safe_load(open(self._app_path(org, app)).read())
         if not app_yaml["spec"].get("components", None):
-            return
-        app_yaml["spec"]["components"].pop(name, None)
+            return False
+        old_component = app_yaml["spec"]["components"].pop(name, None)
         with open(self._app_path(org, app), "w") as f:
             f.write(yaml.dump(app_yaml))
+        return bool(old_component)
 
     def get_components(self, org, app):
         if not self._is_app(org, app):

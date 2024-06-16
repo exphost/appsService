@@ -302,10 +302,11 @@ def test_update_component(app):
 
 
 def test_delete_component(app):
-    app.dao.delete_component(
+    ret = app.dao.delete_component(
         org="test-org",
         app="app1",
         name="frontend")
+    assert ret is True
     get_app = app.dao.get_app(org="test-org", app="app1")["components"]
     expected = {
        'backend': {
@@ -377,10 +378,11 @@ def test_delete_component_non_existing_app(app):
 
 
 def test_delete_component_non_existing_component(app):
-    app.dao.delete_component(
+    ret = app.dao.delete_component(
         org="test-org",
         app="app1",
         name="frontend2")
+    assert ret is False
 
 
 def test_get_component(app):

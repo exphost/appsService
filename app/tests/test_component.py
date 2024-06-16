@@ -1,3 +1,6 @@
+import pytest
+
+
 USER="eyJpc3MiOiAiaHR0cHM6Ly9hdXRoLmdhdGV3YXktMzktZGV2LXBhc3MtdXNlci0wNWxzamMuY2kuZXhwaG9zdC5wbC9kZXgiLCAic3ViIjogIkNnZDBaWE4wTFhCeUVnUnNaR0Z3IiwgImF1ZCI6ICJleHBob3N0LWNvbnRyb2xsZXIiLCAiZXhwIjogMTY1MjE4MDM1MywgImlhdCI6IDE2NTIwOTM5NTMsICJhdF9oYXNoIjogIjc1a0NUUkRxTFFMU19XWjgyVUtXZGciLCAiZW1haWwiOiAidGVzdC1wckBtYWlsLnJ1IiwgImVtYWlsX3ZlcmlmaWVkIjogdHJ1ZSwgImdyb3VwcyI6IFsidGVzdC11c2VyIiwgInRlc3Qtb3JnIl0sICJuYW1lIjogInRlc3QtdXNlciJ9" # noqa
 
 
@@ -156,3 +159,53 @@ def test_component_get(client, app):
             }
         },
     }
+
+
+def test_component_delete(client, app):
+    response = client.delete(
+        '/api/apps/v1/components/?org=test-org&app=app1&name=frontend',
+        headers={'Authorization': 'Bearer ' + USER})
+    assert response.status_code == 204
+    with pytest.raises(FileNotFoundError):
+        app.dao.get_component(org="test-org", app="app1", name="frontend")
+
+
+def test_component_delete_non_existing(client, app):
+    response = client.delete(
+        '/api/apps/v1/components/?org=test-org&app=app1&name=non-existing',
+        headers={'Authorization': 'Bearer ' + USER})
+    assert response.status_code == 404
+
+
+def test_component_delete_missing_name(client):
+    response = client.delete(
+        '/api/apps/v1/components/?org=test-org&app=app1',
+        headers={'Authorization': 'Bearer ' + USER})
+    assert response.status_code == 400
+
+
+def test_component_delete_missing_app(client):
+    response = client.delete(
+        '/api/apps/v1/components/?org=test-org&name=frontend',
+        headers={'Authorization': 'Bearer ' + USER})
+    assert response.status_code == 400
+
+
+def test_component_delete_missing_org(client):
+    response = client.delete(
+        '/api/apps/v1/components/?app=app1&name=frontend',
+        headers={'Authorization': 'Bearer ' + USER})
+    assert response.status_code == 400
+
+
+def test_component_delete_not_logged(client):
+    response = client.delete(
+        '/api/apps/v1/components/?org=test-org&app=app1&name=frontend')
+    assert response.status_code == 401
+
+
+def test_component_delete_wrong_org(client):
+    response = client.delete(
+        '/api/apps/v1/components/?org=another-org&app=app1&name=frontend',
+        headers={'Authorization': 'Bearer ' + USER})
+    assert response.status_code == 403

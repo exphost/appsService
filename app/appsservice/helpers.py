@@ -16,7 +16,7 @@ def has_access_to_org(fn):
 
         if request.method == "POST":
             org = request.json['org']
-        elif request.method == "GET":
+        elif request.method == "GET" or request.method == "DELETE":
             org = request.args['org']
         else:
             return {'error': 'Method not implemented'}, 501
@@ -33,7 +33,7 @@ def required_fields(fields):
                 if request.method == "POST":
                     if field not in request.json:
                         return {'message': f'Missing field {field}'}, 400
-                elif request.method == "GET":
+                elif request.method == "GET" or request.method == "DELETE":
                     if field not in request.args:
                         return {'message': f'Missing field {field}'}, 400
             return fn(*args, **kwargs)
